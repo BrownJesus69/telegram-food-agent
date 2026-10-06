@@ -33,6 +33,7 @@ hasivu swalpa sakkath one more another plate plates portion portions piece piece
 places hotel hotels delivery deliver delivered home office feed feeds serve serving per person people rich aagide aagthide
 aagi ide ittu tell recommend suggest suggestion suggestions choose pick surprise lot lots enough
 liye log logon s t what whats which where how kya raining rain rainy weather birthday party extra total date nothing too kids kid children jana
+halal kosher diabetic diabetes keto friendly
 """.split())
 
 # Kannada / Hindi dish words -> catalogue vocabulary

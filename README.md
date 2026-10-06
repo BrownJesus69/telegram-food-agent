@@ -11,6 +11,19 @@ Neighbourhood coordinates are approximate area centres.
 
 Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [docs/adr](docs/adr) · live QA run: [docs/QA-REPORT.md](docs/QA-REPORT.md) · 6-minute demo script: [docs/DEMO.md](docs/DEMO.md).
 
+## If you have 60 seconds
+1. **The idea:** an LLM is allowed to *understand* a message but never to *decide* anything; plain code owns every constraint
+   ([ADR 0002](docs/adr/0002-llm-boundary.md)).
+2. **The proof, not the claim:** [evals/REDTEAM.md](evals/REDTEAM.md): 96 hostile messages, the LLM alone drops a stated
+   diet/allergen/budget in 16 of the 79 it was recorded on; this pipeline in 0, even against a model that obeys every injection.
+3. **The honesty:** every set of tests shows what it scored the *first* time, before anything was fixed
+   ([history](evals/history/redteam-first-runs.md): 16 of 24 held-out cases failed), and
+   [THREAT-MODEL.md](docs/THREAT-MODEL.md) lists what is still open.
+4. **The product:** order for yourself or a friend across Bengaluru; a simulated kitchen and rider run the order with a live-location map
+   ([live QA, twice](docs/QA-REPORT.md)).
+5. **The operations:** Docker (non-root, read-only, healthcheck, restart policy), CI that runs 253 tests plus the evals, a `/metrics` endpoint
+   and a dashboard. The live bot is [@AdityaTFood_bot](https://t.me/AdityaTFood_bot); it runs on the author's machine, so it is up only while that machine is.
+
 ## What a customer can say
 | Message | What happens |
 |---|---|

@@ -74,6 +74,11 @@ TRANSCRIBE_HINT = ("Food order in Bengaluru: masala dosa, idli vada, filter coff
                    "bisi bele bath, Koramangala, Indiranagar, HSR Layout, under 300 rupees, veg, non veg.")
 
 
+def model_options(model: str) -> dict:
+    """Request parameters that only some models accept (the gpt-oss family reasons; a low effort keeps tokens down)."""
+    return {"reasoning_effort": "low"} if model.startswith("openai/gpt-oss") else {}
+
+
 class CircuitBreaker:
     """Open (calls refused) for `cooldown` seconds after repeated failures, a 429, or a permanent error."""
 
@@ -111,8 +116,8 @@ class Cassette:
     def get(self, text: str):
         return self.data.get(self.key(text))
 
-    def put(self, model: str, text: str, reply: dict):
-        self.data[self.key(text)] = {"text": text, "model": model, "reply": reply}
+    def put(self, model: str, text: str, reply: dict, meta: dict | None = None):
+        self.data[self.key(text)] = {"text": text, "model": model, "reply": reply, **({"meta": meta} if meta else {})}
         if self.path:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(self.data, indent=1, ensure_ascii=False, sort_keys=True), encoding="utf-8")
@@ -158,11 +163,13 @@ class GroqClient:
         elif self.replay_only or not self.available:
             return None
         else:
+            tokens_before = self.stats["tokens"]
             raw = await self._call_chat(text)
             if raw is None:
                 return None
             if self.record and self.cassette:
-                self.cassette.put(self.model, text, raw)
+                latency = self.stats["latency_ms"][-1] if self.stats["latency_ms"] else None
+                self.cassette.put(self.model, text, raw, {"tokens": self.stats["tokens"] - tokens_before, "latency_ms": latency})
             req = self._parse(raw, text)
         if req:
             self.cache[text.lower()] = req
@@ -185,7 +192,7 @@ class GroqClient:
                 "model": self.model,
                 "temperature": 0,
                 "max_completion_tokens": 500,
-                "reasoning_effort": "low",
+                **model_options(self.model),
                 "response_format": {"type": "json_schema", "json_schema": RESPONSE_SCHEMA},
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},

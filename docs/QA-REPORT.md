@@ -39,3 +39,26 @@ the friend/recipient flow, rate limiting, rejection by the simulated kitchen, an
 ## Privacy note on the recording
 The GIF captured during this run shows the tester's personal chat list, so it is **not** committed to the repository. The
 screenshots in `docs/media/` are of the ops dashboard only.
+
+---
+
+# Round 2: live run on Telegram Web (2026-10-07, 03:10-03:20 IST)
+Same method as above (production container, real Telegram Web, Claude in Chrome), run after the red-team hardening.
+
+| Flow | Result |
+|---|---|
+| `halal chicken biryani for 2` | No match (kitchens closed / out of range, with reasons) **plus** the new honesty line: *"I can't filter for halal yet. Please check each dish's details with the kitchen before ordering."* |
+| Typed address `Embassy Tech Village, Bellandur` | Geocoder returned 4 candidates; picked one (Manyata Tech Park) |
+| Label *A friend / family* → recipient name `Ravi <b>K</b> & Co` → phone | Saved as **Friend**; the name was sanitised to `Ravi bKb Co` (markup characters stripped), phone stored as +919876543210 |
+| `late night snack under 300` with the friend's address active | Header shows the friend address; two late-night options with reasons |
+| Cart: 1 × Egg Maggi (₹75) | Minimum-order warning (₹99) shown; `+` cleared it |
+| Landmark `Gate 2 <a href="http://evil.example">click</a> & call Ravi` | Shown as literal text on the confirm screen, in the admin card and in the order record; never rendered as a link by the bot |
+| Confirm COD, admin card | Admin card shows *Deliver to: Ravi bKb Co · +91…*, address label *(Friend)* and the landmark |
+| Pressing **Cancel order** after the kitchen accepted (a mis-tap: the layout shifted) | Refused: *"Too late to cancel here. Please contact the restaurant."* |
+| `docker restart foodbot` while the order was *preparing* | Order continued: **exactly one** each of picked-up, live-location map, halfway, almost-there, delivered, rating prompt (checked in the page text); nothing duplicated, nothing lost |
+
+## Not exercised live
+- **Kitchen rejection via the admin button.** The simulated kitchen accepts within seconds; my first click landed after acceptance. Covered by `tests/test_fulfilment.py`.
+- **Rate limiting.** The tester's account is the admin, and admins are deliberately exempt from the limiter, so it cannot be triggered from this account. Covered by `tests/test_ops.py`.
+- **GPS pin and voice notes.** Telegram Web has no location picker, and there is no microphone. Covered by `tests/test_addresses.py` and the voice tests.
+- **The LLM paths.** The free daily token allowance of the production model was used up by the red-team recording, so the bot answered from the rules only (the designed degradation). Not a defect; noted so nobody reads these results as LLM coverage.
