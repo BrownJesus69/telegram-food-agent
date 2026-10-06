@@ -1,6 +1,6 @@
 # FoodBot — AI-built Telegram food ordering for Bengaluru
 
-[![CI](https://github.com/BrownJesus69/whatsapp-food-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownJesus69/whatsapp-food-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml)
 
 A Telegram bot where a customer says what they want in plain words (English, Hinglish or Kannada, typed or as a voice
 note), picks a delivery address (home, office, a friend's place), builds a cart, places a cash-on-delivery order, and a
