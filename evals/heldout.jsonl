@@ -1,0 +1,48 @@
+{"id": "t01", "text": "can i get two plates of chicken fried rice", "cats": ["english", "dish", "quantity"], "expect": {"dishes": ["chicken fried rice"], "quantity": 2}}
+{"id": "t02", "text": "paneer tikka masala under 350", "cats": ["english", "dish", "budget"], "expect": {"dishes": ["paneer tikka masala"], "budget": 350}}
+{"id": "t03", "text": "one veg thali for lunch", "cats": ["english", "dish", "diet", "slot"], "expect": {"dishes": ["thali"], "diet": "veg", "slot": "lunch", "quantity": 1}}
+{"id": "t04", "text": "need breakfast for 3, budget 400", "cats": ["english", "group", "budget", "slot"], "expect": {"servings": 3, "slot": "breakfast", "budget": 400, "budget_scope": "total"}}
+{"id": "t05", "text": "any good ice cream near me?", "cats": ["english", "dish"], "expect": {"dishes": ["ice cream"]}}
+{"id": "t06", "text": "I'd like some hot filter coffee and a vada", "cats": ["english", "combine"], "expect": {"dishes": ["filter coffee", "vada"], "combine": true}}
+{"id": "t07", "text": "4 plain dosa", "cats": ["english", "dish", "quantity"], "expect": {"dishes": ["plain dosa"], "quantity": 4}}
+{"id": "t08", "text": "non-vegetarian thali", "cats": ["english", "dish", "diet"], "expect": {"dishes": ["thali"], "diet": "nonveg"}}
+{"id": "t09", "text": "chicken biriyani 2 plates under 500 total", "cats": ["english", "dish", "quantity", "budget"], "expect": {"dishes": ["chicken biryani"], "quantity": 2, "budget": 500, "budget_scope": "total"}}
+{"id": "t10", "text": "chinese food for 4 under 800", "cats": ["english", "cuisine", "group", "budget"], "expect": {"cuisine": "chinese", "servings": 4, "budget": 800, "budget_scope": "total"}}
+{"id": "t11", "text": "dessert after dinner for two, nothing nutty", "cats": ["english", "tags", "group", "allergen", "hard"], "expect": {"tags": ["sweet"], "servings": 2, "exclude": ["nuts"]}}
+{"id": "t12", "text": "something spicy and non veg for dinner", "cats": ["english", "spice", "diet", "slot"], "expect": {"spice": "hot", "diet": "nonveg", "slot": "dinner"}}
+{"id": "t13", "text": "a quick veg snack under 80", "cats": ["english", "diet", "slot", "sort", "budget"], "expect": {"diet": "veg", "slot": "snack", "sort": "fastest", "budget": 80}}
+{"id": "t14", "text": "mild paneer curry", "cats": ["english", "spice", "dish"], "expect": {"spice": "mild", "dishes": ["paneer curry"]}}
+{"id": "t15", "text": "I want to eat idli, vada and dosa", "cats": ["english", "dish"], "expect": {"dishes": ["idli", "vada", "dosa"]}}
+{"id": "t16", "text": "samosa chaat", "cats": ["english", "dish"], "expect": {"dishes": ["samosa chaat"]}}
+{"id": "t17", "text": "kids party snacks for 12", "cats": ["english", "group", "tags", "slot"], "expect": {"tags": ["kids-fav"], "servings": 12, "slot": "snack"}}
+{"id": "t18", "text": "veg biryani no onion no garlic", "cats": ["english", "dish", "diet", "allergen"], "expect": {"dishes": ["biryani"], "diet": "veg", "exclude": ["onion-garlic"]}}
+{"id": "t19", "text": "eradu masala dose mattu ondu filter kaapi", "cats": ["kannada", "combine"], "expect": {"dishes": ["masala dosa", "filter coffee"], "combine": true}}
+{"id": "t20", "text": "chicken biryani beku, 250 olage", "cats": ["kannada", "dish", "budget"], "expect": {"dishes": ["chicken biryani"], "budget": 250}}
+{"id": "t21", "text": "ondu plate idli", "cats": ["kannada", "dish", "quantity"], "expect": {"dishes": ["idli"], "quantity": 1}}
+{"id": "t22", "text": "bisi bele bath mattu curd rice", "cats": ["kannada", "combine"], "expect": {"dishes": ["bisi bele bath", "curd rice"], "combine": true}}
+{"id": "t23", "text": "sakkath hasivu, tindi beku", "cats": ["kannada", "slot"], "expect": {"slot": "breakfast", "language": "kn"}}
+{"id": "t24", "text": "mooru jana ge oota", "cats": ["kannada", "group", "hard"], "expect": {"servings": 3, "dishes": ["meals"]}}
+{"id": "t25", "text": "ek butter naan aur paneer butter masala chahiye", "cats": ["hinglish", "combine"], "expect": {"dishes": ["butter naan", "paneer butter masala"], "combine": true, "language": "hi"}}
+{"id": "t26", "text": "sasta aur tasty biryani", "cats": ["hinglish", "sort", "dish"], "expect": {"dishes": ["biryani"], "sort": "cheapest"}}
+{"id": "t27", "text": "kuch chatpata snack 100 tak", "cats": ["hinglish", "spice", "slot", "budget"], "expect": {"spice": "hot", "slot": "snack", "budget": 100}}
+{"id": "t28", "text": "meetha mein kya hai", "cats": ["hinglish", "tags"], "expect": {"tags": ["sweet"]}}
+{"id": "t29", "text": "raat ke liye light khana, 2 log", "cats": ["hinglish", "tags", "slot", "group"], "expect": {"slot": "dinner", "tags": ["light"], "servings": 2}}
+{"id": "t30", "text": "mujhe veg pizza chahiye bina cheese ke", "cats": ["hinglish", "diet", "dish", "allergen", "hard"], "expect": {"diet": "veg", "dishes": ["pizza"], "exclude": ["dairy"]}}
+{"id": "t31", "text": "family dinner for 5, 2 veg 3 non veg", "cats": ["group", "slot"], "expect": {"groups": [{"diet": "veg", "count": 2}, {"diet": "nonveg", "count": 3}], "servings": 5, "slot": "dinner"}}
+{"id": "t32", "text": "office lunch for 8 under 2400 total", "cats": ["group", "budget", "slot"], "expect": {"servings": 8, "slot": "lunch", "budget": 2400, "budget_scope": "total"}}
+{"id": "t33", "text": "hi there", "cats": ["intent"], "expect": {"intent": "greeting"}}
+{"id": "t34", "text": "good evening", "cats": ["intent"], "expect": {"intent": "greeting"}}
+{"id": "t35", "text": "what's in my basket", "cats": ["intent", "hard"], "expect": {"intent": "cart"}}
+{"id": "t36", "text": "ok thanks bye", "cats": ["intent"], "expect": {"intent": "other"}}
+{"id": "t37", "text": "late night biryani for 2", "cats": ["slot", "group", "dish"], "expect": {"slot": "latenight", "dishes": ["biryani"], "servings": 2}}
+{"id": "t38", "text": "healthy veg lunch under 250", "cats": ["tags", "diet", "slot", "budget"], "expect": {"tags": ["healthy"], "diet": "veg", "slot": "lunch", "budget": 250}}
+{"id": "t39", "text": "gluten free and dairy free dessert", "cats": ["allergen", "tags"], "expect": {"exclude": ["gluten", "dairy"], "tags": ["sweet"]}}
+{"id": "t40", "text": "extra spicy mutton", "cats": ["spice", "dish"], "expect": {"spice": "hot", "dishes": ["mutton"]}}
+{"id": "t41", "text": "cheapest veg meals", "cats": ["sort", "diet", "dish"], "expect": {"sort": "cheapest", "diet": "veg", "dishes": ["meals"]}}
+{"id": "t42", "text": "highest rated south indian restaurant", "cats": ["sort", "cuisine"], "expect": {"sort": "top_rated", "cuisine": "south indian"}}
+{"id": "t43", "text": "i need food fast", "cats": ["sort"], "expect": {"sort": "fastest"}}
+{"id": "t44", "text": "tell me what's popular right now", "cats": ["tags", "mood"], "expect": {"tags": ["bestseller"]}}
+{"id": "t45", "text": "veggie burger and fries", "cats": ["diet", "combine", "hard"], "expect": {"diet": "veg", "dishes": ["burger", "fries"], "combine": true}}
+{"id": "t46", "text": "5 people, vegan, dinner", "cats": ["group", "diet", "slot", "tags"], "expect": {"servings": 5, "diet": "veg", "tags": ["vegan"], "slot": "dinner"}}
+{"id": "t47", "text": "2 chicken rolls and 1 egg roll", "cats": ["combine", "dish"], "expect": {"dishes": ["chicken roll", "egg roll"], "combine": true}}
+{"id": "t48", "text": "I'm so hungry, feed me something hearty", "cats": ["mood", "hard"], "expect": {"dishes": []}}

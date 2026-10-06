@@ -1,6 +1,6 @@
 import pytest
 
-from foodbot import db, geo, orders, parser
+from foodbot import db, geo, orders
 from foodbot.services import catalogue
 from foodbot.services.search import closed_matches, search_items
 
@@ -15,21 +15,6 @@ def _orderable(query="biryani", **kw):
         if r.item.price * 2 >= r.restaurant.min_order:
             return r
     raise AssertionError(f"no orderable hit for {query!r}")
-
-
-def test_parse_basic():
-    q = parser.parse("I am hungry, I want Shawarma under 200")
-    assert (q.dish, q.budget, q.qty) == ("shawarma", 200, 1)
-
-
-def test_parse_qty_and_rupee():
-    q = parser.parse("2 chicken shawarma below rs 300")
-    assert (q.dish, q.budget, q.qty) == ("chicken shawarma", 300, 2)
-
-
-def test_parse_diet():
-    assert parser.parse("pure veg burger").diet == "veg"
-    assert parser.parse("non veg roll").diet == "non_veg"
 
 
 def test_haversine():
@@ -128,6 +113,11 @@ def test_cart_blocks_outside_delivery_radius():
 
 
 def test_minimum_order_enforced():
-    r = next(r for r in search_items("biryani", *KORAMANGALA, limit=200, now=NOON) if r.restaurant.min_order > r.item.price)
-    orders.add_item(1, r.item.id, 1)
+    from foodbot.services.distance import haversine_km
+    item = next(
+        i for i in catalogue.ITEMS.values()
+        if i.available and (r := catalogue.RESTAURANTS[i.restaurant_id]).open_at(NOON)
+        and haversine_km(*KORAMANGALA, r.lat, r.lon) <= r.radius_km and r.min_order > i.price
+    )
+    orders.add_item(1, item.id, 1)
     assert any("minimum order" in i for i in orders.cart_summary(1)["issues"])

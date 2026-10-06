@@ -130,3 +130,14 @@ def areas(names):
 
 def skip_phone():
     return InlineKeyboardMarkup(inline_keyboard=[[B(text="Skip phone number", callback_data="addr:skipphone")]])
+
+
+# ------------------------------------------------------------------ concierge
+def plan_add(token, total):
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text=f"🛒 Add all to cart · ₹{total}", callback_data=f"plan:{token}")]])
+
+
+def quick_picks(slot, labels):
+    rows = [[B(text=lab, callback_data=f"ask:{slot}:{i}") for i, lab in enumerate(labels)]]
+    rows.append([B(text="📍 Change address", callback_data="addr:book:s")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)

@@ -9,12 +9,15 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from rapidfuzz import fuzz
 
-from foodbot import address_flow, config, db, orders, parser
+from foodbot import address_flow, config, db, orders
 from foodbot import keyboards as kb
+from foodbot.concierge import planner
+from foodbot.concierge.intent import FoodRequest
+from foodbot.concierge.llm import default_client
+from foodbot.concierge.understand import second_opinion, understand
 from foodbot.services import catalogue
 from foodbot.services.catalogue import RESTAURANTS, get_item, get_items_for_restaurant, get_restaurant
 from foodbot.services.distance import haversine_km
-from foodbot.services.search import closed_matches, search_items
 
 log = logging.getLogger(__name__)
 router = Router()
@@ -23,7 +26,17 @@ esc = html.escape
 # last restaurants shown to each user, so "show menu" with no name means "the first one I just saw"
 LAST_SHOWN: dict[int, list[str]] = {}
 # the last parsed food request per user, so switching address can re-run it
-LAST_QUERY: dict[int, parser.ParsedQuery] = {}
+LAST_QUERY: dict[int, FoodRequest] = {}
+# "add all" plans offered to a user: token -> (user id, [(item id, qty)]); small LRU
+PLANS: dict[str, tuple[int, list[tuple[str, int]]]] = {}
+
+QUICK_PICKS = {
+    "breakfast": ["masala dosa", "idli vada", "filter coffee"],
+    "lunch": ["karnataka meals", "chicken biryani", "north indian thali"],
+    "snack": ["samosa", "pani puri", "masala chai"],
+    "dinner": ["biryani", "kothu parotta", "butter chicken"],
+    "latenight": ["chicken roll", "biryani", "masala maggi"],
+}
 
 STATUS_TEXT = {
     "ACCEPTED": "✅ Order #{id} was accepted. The restaurant is getting started.",
@@ -175,9 +188,9 @@ async def start(m: Message):
     slot = catalogue.current_slot()
     await m.answer(
         "👋 Hi! I find food from Bengaluru kitchens near you — all restaurants and menus here are simulated.\n"
-        "Tell me what you want — e.g. <i>I am hungry, I want biryani under 300</i> — and where to deliver: "
-        "your current spot, your office, or a friend's place.\n"
-        "Commands: /address change delivery address · /cart your cart\n"
+        "Tell me what you want in plain words (English, Hinglish or Kannada) — <i>light dinner for 2 under 500</i>, "
+        "<i>ondu masala dose</i>, <i>kuch meetha</i>, <i>feed 4: 2 veg 2 non-veg under 1500</i> — or send a voice note.\n"
+        "I can deliver to your spot, your office, or a friend's place: /address · your cart: /cart\n"
         f"<i>Right now it's {slot} time in Bengaluru.</i>",
         reply_markup=kb.location_request(),
     )
@@ -210,49 +223,115 @@ def delivery_header(addr) -> str:
     return f"📍 Delivering to {address_flow.describe(addr)}"
 
 
-async def search_and_show(msg: Message, uid: int, q: parser.ParsedQuery, *, text: str | None = None):
-    """Search for what the customer asked at their active address and present the results."""
+def rec_text(rec: planner.Recommendation) -> str:
+    rest = rec.restaurant
+    if len(rec.lines) == 1:
+        it = rec.item
+        spice = "🌶" * it.spice if it.spice else ""
+        qty = f" × {rec.lines[0].qty}" if rec.lines[0].qty > 1 else ""
+        lines = [f"{DIET_ICON.get(it.diet, '')} <b>{esc(it.name)}</b>{qty} — ₹{rec.subtotal} {spice}".rstrip()]
+        if it.description:
+            lines.append(f"<i>{esc(it.description)}</i>")
+    else:
+        lines = [f"🍽 <b>One order, {len(rec.lines)} items</b>"]
+        lines += [f"{DIET_ICON.get(ln.item.diet, '')} {ln.qty} × {esc(ln.item.name)} — ₹{ln.amount}" for ln in rec.lines]
+        lines.append(f"Subtotal ₹{rec.subtotal} + ₹{rest.delivery_fee} delivery = <b>₹{rec.total}</b>")
+    lines.append(f"{esc(rest.name)} · {esc(rest.locality)}")
+    lines.append(f"⭐ {rest.rating:.1f} · {rec.distance_km:.1f} km · ⏱ {rec.eta_min}–{rec.eta_max} min")
+    if rec.reasons:
+        lines.append("✨ " + esc(" · ".join(rec.reasons)))
+    return "\n".join(lines)
+
+
+def _remember_plan(uid: int, rec: planner.Recommendation) -> str:
+    token = uuid.uuid4().hex[:10]
+    PLANS[token] = (uid, [(ln.item.id, ln.qty) for ln in rec.lines])
+    while len(PLANS) > 500:
+        PLANS.pop(next(iter(PLANS)))
+    return token
+
+
+async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str | None = None):
+    """Plan an answer for the request at the customer's active address and present it."""
     addr = db.get_active_address(uid)
     if not addr:
         await msg.answer("Where should I deliver? Choose or add an address first.", reply_markup=kb.change_address("s"))
         return
     lat, lon = addr["latitude"], addr["longitude"]
-    results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS) if q.dish else []
+    slot = catalogue.current_slot()
+    recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
 
-    if not results and text:
-        q2 = await parser.groq_extract(text)
-        if q2 and q2.dish:
-            q = q2
-            results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS)
+    if not recs and text and req.source == "rules" and req.has_target:
+        better = await second_opinion(text, req)                     # typo / Kannada / odd phrasing the rules missed
+        if better and better.has_target:
+            req = better
+            recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
+    if req.has_target:
+        LAST_QUERY[uid] = req
 
-    if not q.dish:
-        await msg.answer("What would you like to eat? Example: <i>chicken biryani under 300</i>")
-        return
-    LAST_QUERY[uid] = q
-
-    if not results:
-        reply = f"I couldn't find “{esc(q.dish)}” open and delivering to <b>{esc(addr['label'])}</b> right now."
-        later = closed_matches(q.dish, lat, lon, budget=q.budget, diet=q.diet)
-        if later:
-            reply += "\n\nThese match but are closed at the moment:\n" + "\n".join(
-                f"• {esc(r.restaurant.name)} (opens {r.restaurant.hours_label.split(' – ')[0]})" for r in later
-            )
-        await msg.answer(reply + "\n\nTry a different address, or another dish.", reply_markup=kb.change_address("s"))
+    ai = " <i>(AI-assisted)</i>" if req.source == "llm" else ""
+    if not recs:
+        reply = f"I couldn't find a match for <b>{esc(req.describe())}</b>{ai} delivering to <b>{esc(addr['label'])}</b> right now."
+        hints = planner.diagnose(req, lat, lon, current_slot=slot) if req.has_target else []
+        if hints:
+            reply += "\n\n" + "\n".join(f"• {esc(h)}" for h in hints)
+        await msg.answer(reply, reply_markup=kb.change_address("s"))
         return
 
-    LAST_SHOWN[uid] = [r.restaurant.id for r in results]
-    await msg.answer(f"{delivery_header(addr)}\nTop {len(results)} option(s):", reply_markup=kb.change_address("s"))
-    for r in results:
-        await msg.answer(result_text(r), reply_markup=kb.select(r.item.id, q.qty))
+    LAST_SHOWN[uid] = [r.restaurant.id for r in recs]
+    understood = f"🧠 {esc(req.describe())}{ai}" if req.has_target else f"🧠 It's {slot} time — popular right now"
+    await msg.answer(f"{delivery_header(addr)}\n{understood}\nTop {len(recs)} option(s):", reply_markup=kb.change_address("s"))
+    for rec in recs:
+        if len(rec.lines) == 1:
+            markup = kb.select(rec.item.id, rec.lines[0].qty)
+        else:
+            markup = kb.plan_add(_remember_plan(uid, rec), rec.subtotal)
+        await msg.answer(rec_text(rec), reply_markup=markup)
 
 
 async def rerun_last_search(msg: Message, uid: int):
-    q = LAST_QUERY.get(uid)
-    if q and q.dish:
-        await msg.answer(f"Re-checking “{esc(q.dish)}” for your new address…")
-        await search_and_show(msg, uid, q)
+    req = LAST_QUERY.get(uid)
+    if req and req.has_target:
+        await msg.answer(f"Re-checking “{esc(req.describe())}” for your new address…")
+        await search_and_show(msg, uid, req)
     else:
         await msg.answer(f"📍 Delivering to {address_flow.describe(db.get_active_address(uid))}\nWhat would you like to eat?")
+
+
+async def greet(msg: Message):
+    slot = catalogue.current_slot()
+    labels = QUICK_PICKS[slot]
+    pretty = {"latenight": "late-night"}.get(slot, slot)
+    await msg.answer(f"👋 Hello! It's {pretty} time in Bengaluru. Fancy one of these, or tell me anything else?",
+                     reply_markup=kb.quick_picks(slot, labels))
+
+
+async def process_text(m: Message, uid: int, text: str):
+    """Everything after the per-user state checks: understand the message and act on it."""
+    req = await understand(text)
+
+    if req.intent == "greeting":
+        await greet(m)
+        return
+    if req.intent == "cart":
+        await send_cart(m, uid)
+        return
+    if req.intent == "address":
+        await address_flow.show_book(m, uid, "a")
+        return
+    if req.intent == "menu" or (req.restaurant and not req.dishes):
+        rest = find_restaurant(req.restaurant or "__last__", uid)
+        await m.answer(build_menu_text_for_restaurant(rest) if rest else "Which restaurant's menu? Try: <i>show me menu of Darshini</i>.")
+        return
+    if req.intent == "other" and not req.has_target:
+        await m.answer("Happy to help! Tell me what you feel like eating — or /address, /cart.")
+        return
+
+    if not db.get_active_address(uid):
+        await m.answer("Where should I deliver? Share a pin, type an address, or pick an area.", reply_markup=kb.location_request())
+        await address_flow.begin_add(m, uid, "s")
+        return
+    await search_and_show(m, uid, req, text=text)
 
 
 @router.message(F.text & ~F.text.startswith("/"))
@@ -285,12 +364,55 @@ async def on_text(m: Message):
         await m.answer(build_menu_text_for_restaurant(rest))
         return
 
-    if not db.get_active_address(uid):
-        await m.answer("Where should I deliver? Share a pin, type an address, or pick an area.", reply_markup=kb.location_request())
-        await address_flow.begin_add(m, uid, "s")
-        return
+    await process_text(m, uid, m.text)
 
-    await search_and_show(m, uid, parser.parse(m.text), text=m.text)
+
+async def transcribe_voice(bot, voice) -> str | None:
+    """Download a Telegram voice note and turn it into text (None if unavailable)."""
+    buf = await bot.download(voice.file_id)
+    return await default_client().transcribe(buf.read() if buf else b"")
+
+
+@router.message(F.voice)
+async def on_voice(m: Message):
+    uid = m.from_user.id
+    db.upsert_user(uid, m.from_user.full_name)
+    if (m.voice.duration or 0) > 30:
+        await m.answer("🎙 Voice notes up to 30 seconds please.")
+        return
+    text = await transcribe_voice(m.bot, m.voice)
+    if not text:
+        await m.answer("🎙 I couldn't make that out (or voice is unavailable right now). Please type your order.")
+        return
+    await m.answer(f"🎙 I heard: <i>“{esc(text[:300])}”</i>")
+    await process_text(m, uid, text)
+
+
+@router.callback_query(F.data.startswith("ask:"))
+async def cb_ask(cb: CallbackQuery):
+    await cb.answer()
+    _, slot, idx = cb.data.split(":")
+    picks = QUICK_PICKS.get(slot, [])
+    if int(idx) >= len(picks):
+        return
+    await process_text(cb.message, cb.from_user.id, picks[int(idx)])
+
+
+@router.callback_query(F.data.startswith("plan:"))
+async def cb_plan(cb: CallbackQuery):
+    entry = PLANS.get(cb.data.split(":", 1)[1])
+    if not entry or entry[0] != cb.from_user.id:
+        await cb.answer("That suggestion expired — ask me again.", show_alert=True)
+        return
+    await cb.answer()
+    try:
+        replaced = orders.replace_cart(cb.from_user.id, entry[1])
+    except orders.OrderError as e:
+        await cb.message.answer(f"⚠️ {esc(str(e))}")
+        return
+    if replaced:
+        await cb.message.answer("Replaced your previous cart with this plan.")
+    await send_cart(cb.message, cb.from_user.id)
 
 
 @router.callback_query(F.data == "noop")

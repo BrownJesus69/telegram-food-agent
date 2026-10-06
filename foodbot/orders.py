@@ -38,6 +38,24 @@ def add_item(tg_id, item_id, qty=1, replace=False):
         conn.close()
 
 
+def replace_cart(tg_id, lines):
+    """Atomically make the cart exactly `lines` ([(item_id, qty)], one restaurant). Returns True if it replaced other items."""
+    items = [(catalogue.ITEMS[i], max(1, min(10, int(q)))) for i, q in lines]
+    if not items or len({it.restaurant_id for it, _ in items}) != 1:
+        raise OrderError("A cart can only hold items from one restaurant.")
+    conn = db.connect()
+    try:
+        with conn:
+            had = conn.execute("SELECT COUNT(*) AS n FROM cart WHERE telegram_id=?", (tg_id,)).fetchone()["n"]
+            conn.execute("DELETE FROM cart WHERE telegram_id=?", (tg_id,))
+            for it, qty in items:
+                conn.execute("INSERT INTO cart(telegram_id, restaurant_id, item_id, qty) VALUES(?,?,?,?)",
+                             (tg_id, it.restaurant_id, it.id, qty))
+        return bool(had)
+    finally:
+        conn.close()
+
+
 def change_qty(tg_id, item_id, delta):
     conn = db.connect()
     try:
