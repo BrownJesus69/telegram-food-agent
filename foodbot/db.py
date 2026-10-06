@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
 
-import config
+from foodbot import config
 
 DB_PATH = config.DB_PATH
 

@@ -1,4 +1,4 @@
-﻿import html
+import html
 import logging
 import re
 import uuid
@@ -7,22 +7,21 @@ from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from rapidfuzz import fuzz
 
-from services.catalogue import RESTAURANTS, get_item, get_restaurant, get_items_for_restaurant
-import config
-import db
-import geo
-import keyboards as kb
-import orders
-import parser
-from services.search import search_items
-from services.distance import haversine_km
+from foodbot import config, db, geo, orders, parser
+from foodbot import keyboards as kb
+from foodbot.services import catalogue
+from foodbot.services.catalogue import RESTAURANTS, get_item, get_items_for_restaurant, get_restaurant
+from foodbot.services.distance import haversine_km
+from foodbot.services.search import closed_matches, search_items
 
 log = logging.getLogger(__name__)
 router = Router()
 esc = html.escape
 
-USER_NEARBY_CACHE = {}
+# last restaurants shown to each user, so "show menu" with no name means "the first one I just saw"
+LAST_SHOWN: dict[int, list[str]] = {}
 
 STATUS_TEXT = {
     "ACCEPTED": "✅ Order #{id} was accepted. The restaurant is getting started.",
@@ -31,15 +30,15 @@ STATUS_TEXT = {
     "DELIVERED": "🎉 Order #{id} was delivered. Enjoy your meal!",
 }
 
+DIET_ICON = {"veg": "🟢", "egg": "🟡", "nonveg": "🔴"}
+
 
 def is_admin(user_id, chat_id):
     return user_id in config.ADMIN_IDS or chat_id in config.ADMIN_IDS
 
 
 def detect_menu_request(text: str):
-    s = (text or "").strip()
-    n = re.sub(r"\s+", " ", s.lower()).strip()
-
+    n = re.sub(r"\s+", " ", (text or "").strip().lower())
     patterns = [
         r"^show me menu of (?P<name>.+)$",
         r"^show menu of (?P<name>.+)$",
@@ -48,105 +47,74 @@ def detect_menu_request(text: str):
         r"^what is available in (?P<name>.+)$",
         r"^show menu for (?P<name>.+)$",
     ]
-
     for pat in patterns:
         m = re.match(pat, n)
         if m:
             name = (m.group("name") or "").strip(" ?.!").strip()
             if name:
                 return name
-
     if n in {"show menu", "show me menu", "menu", "its menu", "show its menu"}:
         return "__LAST__"
-
     return None
 
 
-def resolve_restaurant_name(name: str, nearby_places: list):
+def find_restaurant(name: str, uid: int, user=None):
+    """Resolve a typed restaurant name against the catalogue; ties go to the one nearest the user."""
     target = (name or "").strip().lower()
     if not target:
-        return None, None
-
+        return None
     if target == "__last__":
-        if nearby_places:
-            return nearby_places[0], "nearby"
-        return None, None
-
-    for place in nearby_places or []:
-        pname = (place.get("name") or "").strip().lower()
-        if pname == target:
-            return place, "nearby"
-
-    for place in nearby_places or []:
-        pname = (place.get("name") or "").strip().lower()
-        if target in pname or pname in target:
-            return place, "nearby"
-
+        ids = LAST_SHOWN.get(uid) or []
+        return get_restaurant(ids[0]) if ids else None
+    has_loc = bool(user) and user["latitude"] is not None
+    scored = []
     for rest in RESTAURANTS.values():
-        rname = getattr(rest, "name", "").strip().lower()
-        if rname == target:
-            return rest, "catalogue"
-
-    for rest in RESTAURANTS.values():
-        rname = getattr(rest, "name", "").strip().lower()
-        if target in rname or rname in target:
-            return rest, "catalogue"
-
-    return None, None
+        rn = rest.name.lower()
+        score = 100 if rn == target else max(fuzz.WRatio(target, rn), 90 if target in rn else 0)
+        if score >= 80:
+            dist = haversine_km(user["latitude"], user["longitude"], rest.lat, rest.lon) if has_loc else 0.0
+            scored.append((-score, dist, rest.id, rest))
+    scored.sort(key=lambda x: x[:3])
+    return scored[0][3] if scored else None
 
 
 def build_menu_text_for_restaurant(rest):
-    rest_id = getattr(rest, "id", None)
-    items = get_items_for_restaurant(rest_id) if rest_id is not None else []
-    items = [i for i in items if getattr(i, "active", 1) and getattr(i, "in_stock", 1)]
-
-    if not items:
-        return f"No active menu items found for {esc(getattr(rest, 'name', 'this restaurant'))}."
-
-    items = sorted(
-        items,
-        key=lambda x: (
-            str(getattr(x, "category", "") or ""),
-            int(getattr(x, "price", 0) or 0),
-            str(getattr(x, "name", "") or ""),
-        ),
+    items = [i for i in get_items_for_restaurant(rest.id) if i.available]
+    head = (
+        f"🍽 <b>{esc(rest.name)}</b> · {esc(rest.category)}\n"
+        f"⭐ {rest.rating:.1f} ({rest.rating_count}) · {esc(rest.locality)} · {rest.hours_label}"
+        + ("" if rest.open_at() else " · <b>closed now</b>")
     )
-
-    lines = [f"🍽 <b>Menu — {esc(getattr(rest, 'name', 'Restaurant'))}</b>"]
-    current_category = None
-
-    for item in items[:40]:
-        cat = getattr(item, "category", "Other") or "Other"
-        if cat != current_category:
-            current_category = cat
-            lines.append(f"\n<b>{esc(cat)}</b>")
-        veg_label = "Veg" if getattr(item, "veg", False) else "Non-veg"
-        price = int(getattr(item, "price", 0) or 0)
-        lines.append(f"• {esc(getattr(item, 'name', 'Item'))} — ₹{price} ({veg_label})")
-
-    if len(items) > 40:
-        lines.append(f"\nShowing 40 of {len(items)} items.")
-
+    if not items:
+        return head + "\n\nNo items are available right now."
+    items.sort(key=lambda x: (x.category, x.price, x.name))
+    lines = [head]
+    current = None
+    for it in items[:45]:
+        if it.category != current:
+            current = it.category
+            lines.append(f"\n<b>{esc(current)}</b>")
+        lines.append(f"{DIET_ICON.get(it.diet, '')} {esc(it.name)} — ₹{it.price}")
+    if len(items) > 45:
+        lines.append(f"\nShowing 45 of {len(items)} items.")
     return "\n".join(lines)
 
 
 def result_text(r):
     it, rest = r.item, r.restaurant
-    veg_label = "Veg" if getattr(it, "veg", False) else "Non-veg"
+    spice = "🌶" * it.spice if it.spice else ""
     lines = [
-        f"{it.name} — {rest.name}",
-        f"Price: ₹{it.price}",
-        f"Rating: {float(getattr(rest, 'rating', 4.0)):.1f}",
-        f"Distance: {r.distance_km:.2f} km",
-        f"ETA: {r.eta_min}-{r.eta_max} min",
-        f"Category: {it.category}",
-        f"Type: {veg_label}",
+        f"{DIET_ICON.get(it.diet, '')} <b>{esc(it.name)}</b> — ₹{it.price} {spice}".rstrip(),
+        f"{esc(rest.name)} · {esc(rest.locality)}",
+        f"⭐ {rest.rating:.1f} · {r.distance_km:.1f} km · ⏱ {r.eta_min}–{r.eta_max} min",
     ]
+    if it.description:
+        lines.append(f"<i>{esc(it.description)}</i>")
     return "\n".join(lines)
 
 
 def cart_text(s):
-    lines = "\n".join(f"{l['name']} × {l['qty']} — ₹{l['amount']}" for l in s["lines"])
+    lines = "\n".join(f"{ln['name']} × {ln['qty']} — ₹{ln['amount']}" for ln in s["lines"])
     return (
         f"🛒 <b>Your cart</b> — {esc(s['rest'].name)}\n\n{esc(lines)}\n\n"
         f"Subtotal: ₹{s['subtotal']}\nDelivery: ₹{s['fee']}\n<b>Total: ₹{s['total']}</b>\n"
@@ -198,9 +166,11 @@ async def send_cart(msg, tg_id, edit=False):
 @router.message(Command("help"))
 async def start(m: Message):
     db.upsert_user(m.from_user.id, m.from_user.full_name)
+    slot = catalogue.current_slot()
     await m.answer(
-        "👋 Hi! I find food near you from my restaurant catalogue.\n"
-        "Share your location, then tell me what you want — e.g. <i>I am hungry, I want shawarma under 200</i>.",
+        "👋 Hi! I find food from Bengaluru kitchens near you — all restaurants and menus here are simulated.\n"
+        "Share your location, then tell me what you want — e.g. <i>I am hungry, I want biryani under 300</i>.\n"
+        f"<i>Right now it's {slot} time in Bengaluru.</i>",
         reply_markup=kb.location_request(),
     )
 
@@ -253,64 +223,42 @@ async def on_text(m: Message):
 
     menu_target = detect_menu_request(m.text)
     if menu_target:
-        nearby_places = USER_NEARBY_CACHE.get(uid, [])
-        entity, source = resolve_restaurant_name(menu_target, nearby_places)
-
-        if not entity:
-            await m.answer("I couldn't identify which restaurant menu you want. Try: <i>show me menu of Pallavi</i>")
+        rest = find_restaurant(menu_target, uid, user)
+        if not rest:
+            await m.answer("I couldn't find that restaurant. Try: <i>show me menu of Darshini</i>, or search for a dish first.")
             return
-
-        if source == "nearby":
-            name = entity.get("name", "that place")
-            rest = None
-            for r in RESTAURANTS.values():
-                rname = getattr(r, "name", "").strip().lower()
-                if rname == name.strip().lower():
-                    rest = r
-                    break
-
-            if rest:
-                await m.answer(build_menu_text_for_restaurant(rest))
-                return
-
-            await m.answer(
-                f"{esc(name)} is only available in nearby-place info right now, not in my orderable catalogue. "
-                f"I can show menus only for restaurants loaded in this bot."
-            )
-            return
-
-        if source == "catalogue":
-            await m.answer(build_menu_text_for_restaurant(entity))
-            return
+        await m.answer(build_menu_text_for_restaurant(rest))
+        return
 
     if user["latitude"] is None:
         await m.answer("Please share your location first.", reply_markup=kb.location_request())
         return
 
     q = parser.parse(m.text)
-    results = search_items(q.dish, user["latitude"], user["longitude"], budget=q.budget, limit=5) if q.dish else []
+    lat, lon = user["latitude"], user["longitude"]
+    results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS) if q.dish else []
 
     if not results:
         q2 = await parser.groq_extract(m.text)
         if q2 and q2.dish:
             q = q2
-            results = search_items(q.dish, user["latitude"], user["longitude"], budget=q.budget, limit=5)
+            results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS)
 
     if not q.dish:
-        await m.answer("What would you like to eat? Example: <i>chicken roll under 150</i>")
+        await m.answer("What would you like to eat? Example: <i>chicken biryani under 300</i>")
         return
 
     if not results:
-        text = f"I couldn't find “{esc(q.dish)}” from restaurants that deliver to you."
-        places = await geo.nearby_restaurants(user["latitude"], user["longitude"])
-        USER_NEARBY_CACHE[uid] = places or []
-        if places:
-            text += "\n\nNearby places (info only — I can't order from these):\n" + "\n".join(
-                f"• {esc(p['name'])}" + (f" — {p['distance_m']} m" if p.get("distance_m") else "") for p in places
+        text = f"I couldn't find “{esc(q.dish)}” open and delivering to you right now."
+        later = closed_matches(q.dish, lat, lon, budget=q.budget, diet=q.diet)
+        if later:
+            text += "\n\nThese match but are closed at the moment:\n" + "\n".join(
+                f"• {esc(r.restaurant.name)} (opens {r.restaurant.hours_label.split(' – ')[0]})" for r in later
             )
         await m.answer(text)
         return
 
+    LAST_SHOWN[uid] = [r.restaurant.id for r in results]
     await m.answer(f"Top {len(results)} option(s) near you:")
     for r in results:
         await m.answer(result_text(r), reply_markup=kb.select(r.item.id, q.qty))

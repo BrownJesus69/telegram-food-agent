@@ -1,5 +1,5 @@
-from aiogram.types import (InlineKeyboardButton as B, InlineKeyboardMarkup,
-                           KeyboardButton, ReplyKeyboardMarkup)
+from aiogram.types import InlineKeyboardButton as B
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 
 def location_request():

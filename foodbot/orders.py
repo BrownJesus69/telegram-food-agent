@@ -1,8 +1,9 @@
 import sqlite3
-from services import catalogue
-import db
-import geo
-import search
+
+from foodbot import db
+from foodbot.services import catalogue
+from foodbot.services.distance import haversine_km
+from foodbot.services.eta import estimate_eta
 
 
 class OrderError(Exception):
@@ -76,17 +77,19 @@ def cart_summary(tg_id):
     if rest is None:
         issues.append("Restaurant not found.")
         return {"issues": issues, "lines": lines}
-    if not rest.is_open:
-        issues.append(f"{rest.name} is currently closed.")
+    if not rest.open_at():
+        issues.append(f"{rest.name} is currently closed (open {rest.hours_label}).")
     dist = None
     eta = (0, 0)
     if not user or user["latitude"] is None:
         issues.append("Share your location first.")
     else:
-        dist = geo.haversine_km(user["latitude"], user["longitude"], rest.lat, rest.lon)
+        dist = haversine_km(user["latitude"], user["longitude"], rest.lat, rest.lon)
         if dist > rest.radius_km:
             issues.append(f"You are outside {rest.name}'s delivery area.")
-        eta = search.eta_range(rest, dist)
+        eta = estimate_eta(dist, rest.prep_min)
+    if subtotal < rest.min_order:
+        issues.append(f"{rest.name} has a minimum order of ₹{rest.min_order} (your items: ₹{subtotal}).")
     return {
         "rest": rest, "lines": lines, "subtotal": subtotal, "fee": rest.delivery_fee,
         "total": subtotal + rest.delivery_fee, "dist": dist, "eta": eta, "issues": issues,

@@ -6,7 +6,7 @@ from typing import Optional
 
 import httpx
 
-import config
+from foodbot import config
 
 log = logging.getLogger(__name__)
 

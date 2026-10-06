@@ -5,10 +5,9 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-import config
-import db
-from handlers import router
-from services.catalogue import load
+from foodbot import config, db
+from foodbot.handlers import router
+from foodbot.services.catalogue import load
 
 
 async def main():
