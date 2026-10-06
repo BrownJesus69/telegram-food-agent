@@ -91,3 +91,6 @@ Stretch if time remains: Telegram Mini App map for address pick, photo-of-food o
 - **2026-10-06 — Phase 4 done:** delivery simulation (kitchen auto-accept/prepare, generated rider with live-location ride,
   milestone messages, `/track`, ratings, admin cards edited in place). Single `fulfilment.advance()` path for admin, customer
   and simulator; scheduler is stateless (restart-safe). 12 simulation tests incl. a mutation check.
+- **2026-10-06 — Phase 5 done:** Docker image + compose (non-root, read-only, healthcheck, restart policy, volume), in-process ops server
+  (/healthz, /metrics, protected dashboard), structured JSON logs with per-update context, per-user rate limiting, global error net,
+  SQLite online backups, funnel analytics, `/stats`, graceful SIGTERM, CI workflow, pre-commit, ADR 0003. Bot now runs in the container.

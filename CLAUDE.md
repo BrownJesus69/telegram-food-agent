@@ -7,7 +7,7 @@ AI-assisted engineering (see PLAN.md for the roadmap and the reasoning behind it
 - Tests: `.venv/Scripts/python.exe -m pytest` (no network, frozen clock; must stay green)
 - Lint: `.venv/Scripts/python.exe -m ruff check .`
 - Regenerate data: `python -m tools.catalogue_gen.generate` then `python -m tools.catalogue_gen.validate`
-- Run bot: `python -m foodbot` (only ONE instance per bot token)
+- Run bot: `docker compose up -d --build` (the container is the live bot; only ONE poller per token, so stop it before `python -m foodbot`)
 
 ## Rules
 - Never print, log or commit values from `.env`. Redact tokens in any command output.

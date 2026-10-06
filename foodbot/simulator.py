@@ -9,9 +9,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import time
 from datetime import datetime, timezone
 
-from foodbot import config, db, fulfilment, orders
+from foodbot import config, db, fulfilment, orders, state
 from foodbot.services import catalogue
 
 log = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ async def run(bot):
     while True:
         try:
             await tick(bot)
+            state.sim_tick_at = time.time()
         except asyncio.CancelledError:
             raise
         except Exception:

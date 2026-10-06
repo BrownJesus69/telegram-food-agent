@@ -9,7 +9,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from rapidfuzz import fuzz
 
-from foodbot import address_flow, config, db, fulfilment, orders
+from foodbot import address_flow, config, db, fulfilment, metrics, orders, stats
 from foodbot import keyboards as kb
 from foodbot.concierge import planner
 from foodbot.concierge.intent import FoodRequest
@@ -183,6 +183,13 @@ async def show_cart(m: Message):
     await send_cart(m, m.from_user.id)
 
 
+@router.message(Command("stats"))
+async def admin_stats(m: Message):
+    if not is_admin(m.from_user.id, m.chat.id):
+        return
+    await m.answer(stats.summary_text())
+
+
 @router.message(Command("orders"))
 async def admin_orders(m: Message):
     if not is_admin(m.from_user.id, m.chat.id):
@@ -243,6 +250,8 @@ async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str
             recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
     if req.has_target:
         LAST_QUERY[uid] = req
+    metrics.SEARCHES.inc(result="found" if recs else "empty", source=req.source)
+    db.log_event("search", uid, found=len(recs), source=req.source)
 
     ai = " <i>(AI-assisted)</i>" if req.source == "llm" else ""
     if not recs:
@@ -443,6 +452,7 @@ async def cb_plan(cb: CallbackQuery):
         await cb.answer("That suggestion expired — ask me again.", show_alert=True)
         return
     await cb.answer()
+    db.log_event("cart_add", cb.from_user.id, plan=True)
     try:
         replaced = orders.replace_cart(cb.from_user.id, entry[1])
     except orders.OrderError as e:
@@ -466,6 +476,7 @@ async def cb_select(cb: CallbackQuery):
     if not it or not it.available:
         await cb.message.answer("Sorry, that item is no longer available.")
         return
+    db.log_event("cart_add", cb.from_user.id)
     if orders.add_item(cb.from_user.id, item_id, int(qty)) == "conflict":
         await cb.message.answer(
             "Your cart has items from another restaurant. Clear it and start a new cart?",
@@ -516,6 +527,7 @@ async def cb_checkout(cb: CallbackQuery):
         await cb.message.answer("⚠️ " + esc(" ".join(s["issues"])))
         return
     db.set_field(cb.from_user.id, awaiting="landmark")
+    db.log_event("checkout_start", cb.from_user.id)
     await cb.message.answer(
         "Send a landmark or delivery instruction (e.g. <i>Main gate, opposite ABC College</i>), or tap Skip.",
         reply_markup=kb.skip_landmark(),
@@ -561,6 +573,8 @@ async def cb_confirm(cb: CallbackQuery):
     if not new:
         await cb.message.answer(f"Order #{oid} was already placed.")
         return
+    db.log_event("order_placed", cb.from_user.id, order_id=oid)
+    metrics.ORDERS.inc(status="PENDING")
     order, items = orders.get_order(oid)
     sent = 0
     for admin_id in config.ADMIN_IDS:

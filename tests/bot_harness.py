@@ -2,7 +2,7 @@
 import re
 from datetime import datetime
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ParseMode
@@ -10,6 +10,7 @@ from aiogram.methods import EditMessageLiveLocation, EditMessageText, SendLocati
 from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User
 
 from foodbot import address_flow
+from foodbot.app import build_dispatcher
 from foodbot.handlers import router
 
 CUSTOMER, ADMIN = 1, 999
@@ -105,10 +106,9 @@ class BotEnv:
     def __init__(self):
         self.session = RecordingSession()
         self.bot = Bot("123456:TEST", session=self.session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-        self.dp = Dispatcher()
         for r in (address_flow.router, router):
             r._parent_router = None          # module-level routers are reused across tests; aiogram forbids re-attaching
-            self.dp.include_router(r)
+        self.dp = build_dispatcher()          # the real production dispatcher, middleware included
         self._uid = 10
 
     def _next(self):

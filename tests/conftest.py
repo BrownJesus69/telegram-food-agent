@@ -25,6 +25,8 @@ def env(tmp_path, monkeypatch):
     # tests must never touch the network or depend on the developer's real keys
     monkeypatch.setattr(config, "GROQ_API_KEY", "")
     monkeypatch.setattr(config, "GEOAPIFY_API_KEY", "")
+    monkeypatch.setattr(config, "THROTTLE_BURST", 10_000)          # rate limiting has its own tests
+    monkeypatch.setattr(config, "DASHBOARD_KEY", "")
     from foodbot import handlers
     from foodbot.concierge import llm as llm_mod
     monkeypatch.setattr(llm_mod, "_default", llm_mod.GroqClient(api_key=""))      # no key: the LLM can never be reached

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from aiogram.exceptions import TelegramAPIError
 
-from foodbot import config, courier, db, orders
+from foodbot import config, courier, db, metrics, orders
 from foodbot import keyboards as kb
 from foodbot.services import catalogue
 from foodbot.services.distance import haversine_km
@@ -191,6 +191,7 @@ async def end_ride(bot, order, rider):
 async def advance(bot, order_id, new_status, note=None, now: datetime | None = None, notify=True):
     """Move an order to `new_status` (raises orders.OrderError if the state machine forbids it) and tell everyone."""
     orders.transition(order_id, new_status, note)
+    metrics.ORDERS.inc(status=new_status)
     order, _ = orders.get_order(order_id)
     rider = db.get_courier(order_id)
 

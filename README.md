@@ -88,6 +88,27 @@ python -m foodbot
 
 Only one instance may poll a bot token at a time (Telegram returns a `Conflict` error otherwise).
 
+## Operations (Docker, 24/7)
+```bash
+docker compose up -d --build        # builds the image, starts the bot, restarts it on crash/reboot
+docker compose logs -f              # structured JSON logs (one object per line, with update_id and user_id)
+docker compose down                 # graceful stop (SIGTERM: finishes the current update, exits 0)
+```
+* **Image:** `python:3.12-slim`, non-root user, read-only root filesystem, all capabilities dropped, no secrets baked in
+  (`.env` is injected at run time), healthcheck via `python -m foodbot.healthcheck`. State lives in the `foodbot-data` volume.
+* **`http://127.0.0.1:8080`** (this machine only): `/healthz` (database, catalogue, Telegram heartbeat, simulator; 503 if
+  degraded), `/metrics` (Prometheus text: updates, latency histogram, errors, rate-limited, order transitions, searches by
+  reading source, LLM calls/tokens/breaker, orders by status), and `/dashboard?key=<DASHBOARD_KEY>` (funnel, orders per
+  hour, recent orders with riders, AI panel with eval scores, system panel; refreshes every 5 s). The dashboard and
+  `/api/stats` return 404 unless `DASHBOARD_KEY` is set, and never render user text as HTML.
+* **Safety nets:** per-user rate limiting (burst 10, 0.5/s; admins exempt), a global error net that tells the user and keeps
+  polling, SQLite WAL, an online backup every 6 h (newest 7 kept, in `/data/backups`), analytics events pruned after 30 days.
+* **Admin commands:** `/stats` (summary of the dashboard), `/orders`. Customers: `/track`, `/address`, `/cart`.
+* Docker Desktop must start with the machine for the bot to survive a reboot. `docker kill` counts as a manual stop and is
+  not auto-restarted; crashes are.
+* CI (`.github/workflows/ci.yml`): ruff, catalogue validation, ~175 tests, the concierge eval + guardrail, then a Docker build
+  with non-root / no-secrets / catalogue-loads / fails-fast-without-token checks.
+
 ## Layout
 ```
 foodbot/             application (python -m foodbot)

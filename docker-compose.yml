@@ -1,0 +1,37 @@
+# FoodBot: `docker compose up -d --build` keeps the bot online 24/7 (restarts after crashes and after a reboot,
+# as long as Docker itself starts with the machine).
+services:
+  bot:
+    build:
+      context: .
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+    image: foodbot:local
+    container_name: foodbot
+    restart: unless-stopped
+    env_file: .env                      # TELEGRAM_BOT_TOKEN, ADMIN_CHAT_ID, GROQ_API_KEY, ... (never baked into the image)
+    environment:
+      DB_PATH: /data/foodbot.db         # wins over any DB_PATH/DATABASE_PATH in .env, which point at host paths
+      BACKUP_DIR: /data/backups
+      LOG_FORMAT: json
+    ports:
+      - "127.0.0.1:${OPS_PORT:-8080}:8080"      # health, metrics, dashboard: this machine only
+    volumes:
+      - foodbot-data:/data
+    stop_grace_period: 20s              # time to finish the current update on SIGTERM
+    mem_limit: 512m
+    read_only: true                     # the image is immutable; only /data and /tmp are writable
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  foodbot-data:

@@ -73,6 +73,11 @@ CREATE TABLE IF NOT EXISTS order_messages(
     order_id INTEGER NOT NULL, chat_id INTEGER NOT NULL, message_id INTEGER NOT NULL, kind TEXT NOT NULL,
     PRIMARY KEY(order_id, chat_id, kind)
 );
+CREATE TABLE IF NOT EXISTS events(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL, kind TEXT NOT NULL, user_id INTEGER, data TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_events_kind_ts ON events(kind, ts);
 CREATE TABLE IF NOT EXISTS order_log(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL, status TEXT NOT NULL, note TEXT, at TEXT NOT NULL
@@ -329,3 +334,16 @@ def order_messages(order_id, kind):
     rows = conn.execute("SELECT chat_id, message_id FROM order_messages WHERE order_id=? AND kind=?", (order_id, kind)).fetchall()
     conn.close()
     return rows
+
+
+# ---------------------------------------------------------------------------- analytics events
+def log_event(kind, user_id=None, **data):
+    """Funnel / product analytics. Must never break a user flow, so every failure is swallowed."""
+    try:
+        conn = connect()
+        with conn:
+            conn.execute("INSERT INTO events(ts, kind, user_id, data) VALUES(?,?,?,?)",
+                         (now(), kind, user_id, json.dumps(data) if data else None))
+        conn.close()
+    except Exception:
+        pass

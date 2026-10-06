@@ -25,6 +25,16 @@ SIM_REJECT_RATE = float(os.getenv("SIM_REJECT_RATE", "0"))                   # c
 SIM_TICK_SECONDS = float(os.getenv("SIM_TICK_SECONDS", "2"))
 SIM_LIVE_EDIT_SECONDS = float(os.getenv("SIM_LIVE_EDIT_SECONDS", "5"))       # how often the live location moves
 
+# --- operations -----------------------------------------------------------------------------------------
+LOG_FORMAT = os.getenv("LOG_FORMAT", "text").strip().lower()                 # "json" in containers
+OPS_HOST = os.getenv("OPS_HOST", "127.0.0.1").strip()                        # health/metrics/dashboard server
+OPS_PORT = int(os.getenv("OPS_PORT", "8080"))
+DASHBOARD_KEY = os.getenv("DASHBOARD_KEY", "").strip()                       # empty = dashboard disabled (health + metrics stay on)
+THROTTLE_BURST = float(os.getenv("THROTTLE_BURST", "10"))                    # per-user burst of messages ...
+THROTTLE_PER_SECOND = float(os.getenv("THROTTLE_PER_SECOND", "0.5"))         # ... refilled at this rate
+BACKUP_DIR = os.getenv("BACKUP_DIR", str(BASE_DIR / "backups"))
+BACKUP_EVERY_HOURS = float(os.getenv("BACKUP_EVERY_HOURS", "6"))
+
 ADMIN_IDS = {
     int(x)
     for x in os.getenv("ADMIN_CHAT_ID", "").replace(" ", "").split(",")
