@@ -148,7 +148,7 @@ svg{width:100%;height:120px}.muted{color:var(--mute)}
 const q = location.search;
 const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
 const card = (cls, title) => { const c = el('section', 'card ' + cls); if (title) c.append(el('h2', '', title)); return c; };
-const dur = s => s == null ? '–' : s >= 3600 ? Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m' : s >= 60 ? Math.floor(s/60)+'m '+(s%60)+'s' : s+'s';
+const dur = s => s == null ? '–' : (s = Math.round(s)) >= 3600 ? Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m' : s >= 60 ? Math.floor(s/60)+'m '+(s%60)+'s' : s+'s';
 function bars(rows, max) { const w = el('div'); const m = max || Math.max(1, ...rows.map(r => r[1]));
   rows.forEach(([t, n]) => { const r = el('div', 'bar'); r.append(el('span', 't', t)); const b = el('span', 'b'); b.style.width = (100 * n / m) + '%'; r.append(b, el('span', 'n', n)); w.append(r); }); return w; }
 function hourly(vals) { const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 240 100'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Orders per hour, last 24 hours');

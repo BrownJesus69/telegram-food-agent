@@ -86,7 +86,7 @@ Stretch if time remains: Telegram Mini App map for address pick, photo-of-food o
 - **2026-10-06 — Phase 2 done:** address book, switch-anywhere, order for someone else, order snapshots.
 - **2026-10-06 — Phase 3 done:** AI concierge (rules + Groq cascade, grounded planner, groups/bundles/allergens, voice notes,
   explanations), 164-case eval harness with held-out set and grounding gate. Measured: held-out 87.5% (rules) → 91.7% (full
-  pipeline); LLM-only 68.8%; 0 guardrail violations. See `evals/RESULTS.md` and ADR 0002.
+  pipeline); LLM-only 66.7%; 0 guardrail violations. See `evals/RESULTS.md` and ADR 0002.
 - Next: Phase 4 (delivery simulation), Phase 5 (Docker, CI, dashboard), Phase 6 (QA via Chrome, demo script).
 - **2026-10-06 — Phase 4 done:** delivery simulation (kitchen auto-accept/prepare, generated rider with live-location ride,
   milestone messages, `/track`, ratings, admin cards edited in place). Single `fulfilment.advance()` path for admin, customer
@@ -94,3 +94,4 @@ Stretch if time remains: Telegram Mini App map for address pick, photo-of-food o
 - **2026-10-06 — Phase 5 done:** Docker image + compose (non-root, read-only, healthcheck, restart policy, volume), in-process ops server
   (/healthz, /metrics, protected dashboard), structured JSON logs with per-update context, per-user rate limiting, global error net,
   SQLite online backups, funnel analytics, `/stats`, graceful SIGTERM, CI workflow, pre-commit, ADR 0003. Bot now runs in the container.
+- **2026-10-07 — Phase 6 done:** live QA on Telegram Web (order lifecycle with live-location map, group plan, Kannada, diagnosis, admin card, dashboard). Found and fixed an unnecessary-LLM-call/mislabel bug and a dashboard formatting bug. docs/QA-REPORT.md, docs/DEMO.md, dashboard screenshots. The QA GIF stays out of the repo (it shows a personal chat list).

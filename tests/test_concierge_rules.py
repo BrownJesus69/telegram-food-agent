@@ -100,3 +100,9 @@ def test_from_dict_tolerates_garbage_shapes():
 
 def test_other_intent_with_a_target_is_an_order():
     assert from_dict({"intent": "other", "tags": ["sweet"]}).intent == "order"
+
+
+def test_describe_does_not_echo_a_cuisine_the_dish_already_names():
+    r = from_dict({"dishes": ["biryani"], "cuisine": "biryani"}, source="llm")
+    assert r.describe() == "biryani"
+    assert from_dict({"tags": ["light"], "cuisine": "chinese"}, source="llm").describe().startswith("Chinese")

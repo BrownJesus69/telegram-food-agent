@@ -242,12 +242,17 @@ async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str
     lat, lon = addr["latitude"], addr["longitude"]
     slot = catalogue.current_slot()
     recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
-
-    if not recs and text and req.source == "rules" and req.has_target:
-        better = await second_opinion(text, req)                     # typo / Kannada / odd phrasing the rules missed
-        if better and better.has_target:
-            req = better
-            recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
+    hints: list[str] = []
+    if not recs and req.has_target:
+        hints = planner.diagnose(req, lat, lon, current_slot=slot)
+        # A constraint that explains the empty result (budget, hours, range, allergen) means the reading was fine;
+        # only an unexplained miss (typo, Kannada, odd phrasing) is worth an LLM second opinion.
+        if not hints and text and req.source == "rules":
+            better = await second_opinion(text, req)
+            if better and better.has_target:
+                req = better
+                recs = planner.recommend(req, lat, lon, limit=config.MAX_SEARCH_RESULTS, current_slot=slot)
+                hints = [] if recs else planner.diagnose(req, lat, lon, current_slot=slot)
     if req.has_target:
         LAST_QUERY[uid] = req
     metrics.SEARCHES.inc(result="found" if recs else "empty", source=req.source)
@@ -256,7 +261,6 @@ async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str
     ai = " <i>(AI-assisted)</i>" if req.source == "llm" else ""
     if not recs:
         reply = f"I couldn't find a match for <b>{esc(req.describe())}</b>{ai} delivering to <b>{esc(addr['label'])}</b> right now."
-        hints = planner.diagnose(req, lat, lon, current_slot=slot) if req.has_target else []
         if hints:
             reply += "\n\n" + "\n".join(f"• {esc(h)}" for h in hints)
         await msg.answer(reply, reply_markup=kb.change_address("s"))

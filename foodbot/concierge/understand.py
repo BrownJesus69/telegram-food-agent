@@ -23,7 +23,7 @@ def normalise_llm(req: FoodRequest, text: str) -> FoodRequest:
         req.combine = True
     if req.cuisine:                       # a cuisine the customer never mentioned would silently hide most of the menu
         words = {w for w, key in CUISINE_WORDS if key == req.cuisine} | {req.cuisine}
-        if not any(w in text.lower() for w in words):
+        if not any(w in text.lower() for w in words) or any(req.cuisine in d for d in req.dishes):
             req.cuisine = None
     if "tiffin" in req.dishes and not req.slot:
         req.slot = "breakfast"

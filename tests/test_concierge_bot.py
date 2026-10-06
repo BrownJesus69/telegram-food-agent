@@ -131,3 +131,17 @@ async def test_changing_address_reruns_the_concierge_request(bot_env):
     await env.press(CUSTOMER, f"addr:use:{office}:s")
     assert any("Re-checking" in t for t in session.texts(CUSTOMER))
     assert list(handlers.LAST_SHOWN[CUSTOMER]) != first
+
+
+async def test_budget_miss_is_explained_without_bothering_the_llm(bot_env, monkeypatch):
+    """Found in live QA: 'biryani under 100' was labelled AI-assisted although the budget explained the miss."""
+    env, session = bot_env, bot_env.session
+    _located()
+
+    async def must_not_be_called(*a, **k):
+        raise AssertionError("an explainable miss must not spend an LLM call")
+
+    monkeypatch.setattr(handlers, "second_opinion", must_not_be_called)
+    await env.say(CUSTOMER, "biryani under 100")
+    msg = session.last_text()
+    assert "Cheapest match" in msg and "AI-assisted" not in msg and "biryani · Biryani" not in msg

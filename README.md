@@ -1,5 +1,7 @@
 # FoodBot — AI-built Telegram food ordering for Bengaluru
 
+[![CI](https://github.com/BrownJesus69/whatsapp-food-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownJesus69/whatsapp-food-agent/actions/workflows/ci.yml)
+
 A Telegram bot where a customer says what they want in plain words (English, Hinglish or Kannada, typed or as a voice
 note), picks a delivery address (home, office, a friend's place), builds a cart, places a cash-on-delivery order, and a
 restaurant operator accepts / prepares / dispatches it from the same chat.
@@ -7,7 +9,7 @@ restaurant operator accepts / prepares / dispatches it from the same chat.
 **All restaurants, menus, prices, ratings and hours are synthetic.** Nothing comes from a real restaurant.
 Neighbourhood coordinates are approximate area centres.
 
-Status: **v0.3**. Roadmap and audit: [PLAN.md](PLAN.md). Design decisions: [docs/adr](docs/adr).
+Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [docs/adr](docs/adr) · live QA run: [docs/QA-REPORT.md](docs/QA-REPORT.md) · 6-minute demo script: [docs/DEMO.md](docs/DEMO.md).
 
 ## What a customer can say
 | Message | What happens |
@@ -50,7 +52,7 @@ Groq replies (`evals/cassette.json`), so runs are free, offline and deterministi
 | | dev (116) | held-out (48) |
 |---|---|---|
 | rules only | 99.1% | 87.5% |
-| LLM only (gpt-oss-20b, strict schema) | 69.0% | 68.8% |
+| LLM only (gpt-oss-20b, strict schema) | 69.0% | 66.7% |
 | rules → LLM cascade | 99.1% | 89.6% |
 | full pipeline (+ second opinion when nothing is found) | 98.3% | **91.7%** |
 
@@ -108,6 +110,9 @@ docker compose down                 # graceful stop (SIGTERM: finishes the curre
   not auto-restarted; crashes are.
 * CI (`.github/workflows/ci.yml`): ruff, catalogue validation, ~175 tests, the concierge eval + guardrail, then a Docker build
   with non-root / no-secrets / catalogue-loads / fails-fast-without-token checks.
+
+![Ops dashboard](docs/media/dashboard-top.jpg)
+![Ops dashboard: AI and system panels](docs/media/dashboard-ai-system.jpg)
 
 ## Layout
 ```

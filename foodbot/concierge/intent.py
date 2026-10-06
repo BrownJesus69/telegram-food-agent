@@ -102,7 +102,7 @@ class FoodRequest:
         bits = []
         if self.dishes:
             bits.append((" + " if self.combine else ", ").join(self.dishes))
-        if self.cuisine:
+        if self.cuisine and not any(self.cuisine in d for d in self.dishes):
             bits.append(self.cuisine.title())
         if self.groups:
             bits.append(" + ".join(f"{g.count} {'non-veg' if g.diet == 'nonveg' else g.diet}" for g in self.groups))

@@ -80,7 +80,8 @@ async def read(mode: str, text: str, client: GroqClient) -> FoodRequest | None:
     if mode == "full" and req.source == "rules" and req.has_target:
         # production also asks the LLM for a second opinion when the rules' reading finds nothing to sell
         recs = planner.recommend(req, *KORAMANGALA, now=TIMES["noon"], limit=1, current_slot=catalogue.current_slot(TIMES["noon"]))
-        if not recs:
+        slot = catalogue.current_slot(TIMES["noon"])
+        if not recs and not planner.diagnose(req, *KORAMANGALA, now=TIMES["noon"], current_slot=slot):
             better = await second_opinion(text, req, llm=client)
             if better and better.has_target:
                 req = better
