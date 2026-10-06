@@ -108,11 +108,12 @@ def make_app() -> web.Application:
 
 
 async def start(host: str | None = None, port: int | None = None) -> web.AppRunner:
+    host = config.OPS_HOST if host is None else host
+    port = config.OPS_PORT if port is None else port          # 0 is a valid request: "any free port"
     runner = web.AppRunner(make_app(), access_log=None)
     await runner.setup()
-    site = web.TCPSite(runner, host or config.OPS_HOST, port or config.OPS_PORT)
-    await site.start()
-    log.info("ops server on http://%s:%s (health, metrics%s)", host or config.OPS_HOST, port or config.OPS_PORT,
+    await web.TCPSite(runner, host, port).start()
+    log.info("ops server on http://%s:%s (health, metrics%s)", host, runner.addresses[0][1],
              ", dashboard" if config.DASHBOARD_KEY else "; dashboard disabled: set DASHBOARD_KEY")
     return runner
 
