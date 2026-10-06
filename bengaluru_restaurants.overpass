@@ -1,0 +1,15 @@
+[out:json][timeout:90];
+(
+  node["amenity"="restaurant"](12.8000,77.4500,13.1500,77.8500);
+  way["amenity"="restaurant"](12.8000,77.4500,13.1500,77.8500);
+  relation["amenity"="restaurant"](12.8000,77.4500,13.1500,77.8500);
+
+  node["amenity"="fast_food"](12.8000,77.4500,13.1500,77.8500);
+  way["amenity"="fast_food"](12.8000,77.4500,13.1500,77.8500);
+  relation["amenity"="fast_food"](12.8000,77.4500,13.1500,77.8500);
+
+  node["amenity"="cafe"](12.8000,77.4500,13.1500,77.8500);
+  way["amenity"="cafe"](12.8000,77.4500,13.1500,77.8500);
+  relation["amenity"="cafe"](12.8000,77.4500,13.1500,77.8500);
+);
+out center tags;
