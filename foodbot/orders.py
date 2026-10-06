@@ -18,8 +18,22 @@ FLOW = {
 }
 
 
+MAX_QTY = 10
+
+
+def clamp_qty(qty) -> int:
+    """Quantities arrive in callback data, which a hostile client can forge: always bound them before they touch the cart."""
+    try:
+        return max(1, min(MAX_QTY, int(qty)))
+    except (TypeError, ValueError):
+        return 1
+
+
 def add_item(tg_id, item_id, qty=1, replace=False):
-    it = catalogue.ITEMS[item_id]
+    it = catalogue.ITEMS.get(item_id)
+    if it is None or not it.available:
+        raise OrderError("That item is no longer available.")
+    qty = clamp_qty(qty)
     conn = db.connect()
     try:
         with conn:
@@ -89,9 +103,10 @@ def cart_summary(tg_id):
         if not it or not it.available:
             issues.append("An item in your cart is no longer available.")
             continue
-        amount = it.price * r["qty"]
+        qty = clamp_qty(r["qty"])               # backstop: whatever is in the table, an order line is 1..10 units
+        amount = it.price * qty
         subtotal += amount
-        lines.append({"item_id": it.id, "name": it.name, "qty": r["qty"], "unit": it.price, "amount": amount})
+        lines.append({"item_id": it.id, "name": it.name, "qty": qty, "unit": it.price, "amount": amount})
     if rest is None:
         issues.append("Restaurant not found.")
         return {"issues": issues, "lines": lines}
@@ -119,7 +134,7 @@ def cart_summary(tg_id):
 
 def create_order(tg_id, key):
     conn = db.connect()
-    existing = conn.execute("SELECT id FROM orders WHERE confirmation_key=?", (key,)).fetchone()
+    existing = conn.execute("SELECT id FROM orders WHERE confirmation_key=? AND customer_id=?", (key, tg_id)).fetchone()
     conn.close()
     if existing:
         return existing["id"], False
@@ -133,7 +148,7 @@ def create_order(tg_id, key):
     conn = db.connect()
     try:
         conn.execute("BEGIN IMMEDIATE")
-        dup = conn.execute("SELECT id FROM orders WHERE confirmation_key=?", (key,)).fetchone()
+        dup = conn.execute("SELECT id FROM orders WHERE confirmation_key=? AND customer_id=?", (key, tg_id)).fetchone()
         if dup:
             conn.execute("ROLLBACK")
             return dup["id"], False
@@ -161,10 +176,10 @@ def create_order(tg_id, key):
         return oid, True
     except sqlite3.IntegrityError:
         conn.execute("ROLLBACK")
-        row = conn.execute("SELECT id FROM orders WHERE confirmation_key=?", (key,)).fetchone()
+        row = conn.execute("SELECT id FROM orders WHERE confirmation_key=? AND customer_id=?", (key, tg_id)).fetchone()
         if row:
             return row["id"], False
-        raise
+        raise OrderError("This checkout has expired. Please open your cart again.") from None
     except Exception:
         if conn.in_transaction:
             conn.execute("ROLLBACK")

@@ -7,6 +7,7 @@ nothing useful or when its reading returns no results.
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from foodbot.concierge.intent import FoodRequest, Group
 
@@ -76,7 +77,31 @@ EXCLUDE_WORDS = {
     "peanut": "peanut", "peanuts": "peanut", "dairy": "dairy", "milk": "dairy", "lactose": "dairy", "gluten": "gluten",
     "egg": "egg", "eggs": "egg", "cheese": "dairy", "butter": "dairy", "cream": "dairy", "curd": "dairy",
     "ghee": "dairy", "fish": "fish", "seafood": "fish", "shellfish": "fish", "soy": "soy", "sesame": "sesame",
+    "cashews": "nuts", "almond": "nuts", "almonds": "nuts", "walnut": "nuts", "walnuts": "nuts", "pistachio": "nuts", "pistachios": "nuts",
+    "hazelnut": "nuts", "hazelnuts": "nuts", "wheat": "gluten", "maida": "gluten", "prawn": "fish", "prawns": "fish", "shrimp": "fish",
+    "crab": "fish", "lobster": "fish", "squid": "fish",
 }
+_ALLERGEN_WORDS = "|".join(sorted(EXCLUDE_WORDS, key=len, reverse=True))
+# phrases that introduce something the customer cannot or will not have ("no X", "can't eat X", "do not add X", "allergic to X")
+EXCLUDE_TRIGGERS = (r"(?:no|without|avoid|skip|minus|free of|allergic to|allergy to|allergic|except|na|intolerant to|sensitive to|stay away from"
+                    r"|(?:can'?t|cannot|can not|cant|don'?t|dont|do not|doesn'?t|doesnt|never|won'?t|wont)\s+(?:eat|have|add|take|use|put|want)"
+                    r"|not\s+(?:to\s+)?(?:add|use|put))")
+_MODIFIERS = r"(?:(?:raw|tree|any|all|the|of|extra|added|dried|fresh|cooked|kind|kinds|type|types|product|products|item|items|anywhere|in|with)\s+){0,2}"
+
+
+# Things a customer may say that the catalogue cannot enforce (no column for them). The bot must not pretend: it says so.
+UNSUPPORTED = {"halal", "kosher", "pork", "beef", "bacon", "ham", "mushroom", "mushrooms", "honey", "sugar", "msg", "mustard", "coconut",
+               "tomato", "tomatoes", "brinjal", "capsicum", "coriander", "potato", "potatoes", "oil", "salt"}
+HEALTH_CUES = r"\b(?:halal|kosher|diabet\w*|keto|cholesterol|low[- ]sodium|sugar[- ]free|celiac|coeliac)\b"
+STRONG_TRIGGER = re.compile(r"(?:allerg|intoleran|sensitive|can'?t|cannot|can not|cant|don'?t|dont|do not|doesn'?t|doesnt|never|won'?t|wont|stay away|avoid)")
+_NOT_A_FOOD = {"and", "or", "no", "without", "avoid", "spicy", "spice", "hot", "oily", "heavy", "fried", "sweet", "sweets", "junk", "delay", "late",
+               "queue", "rush", "crowd", "severe", "serious", "bad", "mild", "strong", "real", "food", "any", "my", "his", "her", "our", "have", "has", "with", "the", "change", "changes", "issue", "problem", "problems", "trouble", "thing", "things", "stuff", "foods"}
+
+
+def _unrecognised(word: str) -> bool:
+    """A word after 'allergic to' / 'can't eat' that is not an allergen we know: a constraint we cannot apply."""
+    return (len(word) > 2 and word not in EXCLUDE_WORDS and word not in FILLER and word not in _NOT_A_FOOD
+            and word not in NUMBER_WORDS and word not in TAG_WORDS and word not in SLOT_WORDS)
 
 
 TOGETHER = {"and", "with", "plus", "mattu", "aur", "saath", "tatha"}
@@ -106,9 +131,32 @@ def _detect_language(tokens: list[str]) -> str:
     return "hi" if hi else "kn" if kn else "en"
 
 
+# letters from other alphabets that are indistinguishable from Latin ones (a customer, or a pasted message, can contain them)
+_LOOKALIKES = str.maketrans({"а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "і": "i", "ѕ": "s", "ј": "j",
+                             "ԁ": "d", "һ": "h", "ո": "n", "ν": "v", "ο": "o", "ε": "e", "ι": "i", "α": "a"})
+_LEET = {"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "9": "g", "2": "z", "6": "g"}
+_WORD_NUMBERS = (("one thousand", 1000), ("two thousand", 2000), ("thousand", 1000), ("nine hundred", 900), ("eight hundred", 800),
+                 ("seven hundred", 700), ("six hundred", 600), ("five hundred", 500), ("four hundred", 400), ("three hundred", 300),
+                 ("two hundred", 200), ("one hundred", 100), ("hundred", 100), ("seventy five", 75), ("fifty", 50), ("twenty five", 25))
+
+
+def _normalise(raw: str) -> str:
+    """Fold what a reader cannot tell apart: full-width forms, invisible characters, Cyrillic/Greek lookalikes, '1,000', '2k'."""
+    s = unicodedata.normalize("NFKC", raw).translate(_LOOKALIKES)
+    s = "".join(ch for ch in s if unicodedata.category(ch) != "Cf")           # zero-width spaces, joiners, bidi controls
+    s = s.lower().replace("’", "'")
+    s = re.sub(r"(?<=[a-z])[0-9](?=[a-z])", lambda m: _LEET[m.group(0)], s)           # v3getarian, g1ve: digits *inside* a word only
+    s = re.sub(r"(?<=\d),(?=\d{3}(?!\d))", "", s)                             # 1,000 -> 1000
+    s = re.sub(r"\b(\d+(?:\.\d+)?)\s*k\b", lambda m: str(int(float(m.group(1)) * 1000)), s)
+    for word, value in _WORD_NUMBERS:
+        s = re.sub(rf"\b{word}\b", str(value), s)
+    return s
+
+
 def interpret_rules(raw: str) -> FoodRequest:
     original = raw or ""
-    t = " " + re.sub(r"\s+", " ", original.lower().replace("’", "'").replace(",", " , ").replace("&", " and ")) + " "
+    t = " " + re.sub(r"\s+", " ", _normalise(original).replace(",", " , ").replace("&", " and ")) + " "
+    t = re.sub(r"\b(?:not|never|no)\s+(?:a\s+)?(?:pure\s+)?veg(?:etarian)?\b(?!\s+(?:alla|nahi|nahin|illa))", "nonveg", t)    # "I'm not vegetarian"
     t = re.sub(r"non[\s-]+veg(?:etarian)?", "nonveg", t)
     t = re.sub(r"\bnon\s*veg\b", "nonveg", t)
     req = FoodRequest(raw=original, source="rules")
@@ -145,27 +193,39 @@ def interpret_rules(raw: str) -> FoodRequest:
 
     # --- exclusions ----------------------------------------------------------------------------
     excl: list[str] = []
-    if re.search(r"\bjain\b", t):
+    if re.search(r"\b(?:jain|sattvic|satvik|sattvik|satvic)\b", t):
         excl.append("onion-garlic")
-        t = re.sub(r"\bjain\b", " ", t)
+        t = re.sub(r"\b(?:jain|sattvic|satvik|sattvik|satvic)\b", " ", t)
+    if re.search(r"\bvegan\b", t):                            # vegan is more than "no meat": no milk products either
+        excl.append("dairy")
     for m in re.finditer(r"\b(egg|dairy|nut|gluten|lactose)less\b", t):
         excl.append(EXCLUDE_WORDS.get(m.group(1), m.group(1)))
     t = re.sub(r"\b(?:egg|dairy|nut|gluten|lactose)less\b", " ", t)
-    for m in list(re.finditer(r"\b(?:no|without|avoid|skip|minus|free of|allergic to|allergy to|except|na)\s+((?:[a-z]+)(?:\s*(?:,|and|or|&|no)\s*[a-z]+){0,2})", t)):
+    cautions: list[str] = [m.group(0) for m in re.finditer(HEALTH_CUES, t)]
+    for m in list(re.finditer(rf"\b{EXCLUDE_TRIGGERS}\s+{_MODIFIERS}((?:[a-z]+)(?:\s*(?:,|and|or|&)\s*(?:(?:no|without|avoid)\s+)?{_MODIFIERS}[a-z]+){{0,3}})", t)):
+        strong = bool(STRONG_TRIGGER.match(m.group(0)))
         for w in re.findall(r"[a-z]+", m.group(1)):
             if w in EXCLUDE_WORDS:
                 excl.append(EXCLUDE_WORDS[w])
-    t = re.sub(r"\b(?:no|without|avoid|skip|minus|free of|allergic to|allergy to|except)\s+(?:[a-z]+)(?:\s*(?:,|and|or|&|no)\s*(?:onion|onions|garlic|nuts?|peanuts?|dairy|egg|eggs|fish|gluten|soy|sesame))*", " ", t)
-    for m in re.finditer(r"\b(nut|peanut|gluten|dairy|lactose|egg|fish|shellfish|soy|sesame)[\s-]*(?:allergy|allergic|free|intolerant|intolerance)\b", t):
+            elif w in UNSUPPORTED or (strong and _unrecognised(w)):          # said out loud, but there is no filter for it
+                cautions.append(w)
+    t = re.sub(rf"\b{EXCLUDE_TRIGGERS}\s+{_MODIFIERS}(?:[a-z]+)(?:\s*(?:,|and|or|&)\s*(?:(?:no|without|avoid)\s+)?(?:{_ALLERGEN_WORDS}))*", " ", t)
+    for m in re.finditer(rf"\b({_ALLERGEN_WORDS})[\s-]*(?:allergy|allergic|free|intolerant|intolerance)\b", t):
         excl.append(EXCLUDE_WORDS.get(m.group(1), m.group(1)))
-    t = re.sub(r"\b(?:nut|peanut|gluten|dairy|lactose|egg|fish|shellfish|soy|sesame)[\s-]*(?:allergy|allergic|free|intolerant|intolerance)\b", " ", t)
+    t = re.sub(rf"\b(?:{_ALLERGEN_WORDS})[\s-]*(?:allergy|allergic|free|intolerant|intolerance)\b", " ", t)
+    for m in re.finditer(r"\b([a-z]+)[\s-]*(?:allergy|allergies|intolerance|intolerant)\b", t):        # "sulphite allergy": an allergen we do not model
+        if _unrecognised(m.group(1)):
+            cautions.append(m.group(1))
+    if re.search(r"\ballerg", t) and not excl and not cautions:
+        cautions.append("that allergy")
     req.exclude = excl
+    req.cautions = cautions
 
     # --- budget --------------------------------------------------------------------------------
     for pat in (
         r"\b(\d{2,5})\s*(?:per person|per head|each|a head|per plate|pp)\b",
-        r"(?:under|below|within|upto|up to|max|maximum|less than|budget(?: of| is)?|around|about|total|only)\s*(?:of\s*)?(?:₹|rs\.?|inr)?\s*(\d{2,5})\b",
-        r"(?:₹|rs\.?|inr)\s*(\d{2,5})\b",
+        r"(?:under|below|within|upto|up to|max|maximum|less than|budget(?: of| is)?|around|about|total|only)\s*(?:of\s*)?(?:₹|rs\.?|inr|rupees?)?\s*(\d{2,5})\b",
+        r"(?:₹|rs\.?|inr|rupees?)\s*(\d{2,5})\b",
         r"\b(\d{2,5})\s*(?:rs|rupees|rupee|inr|₹|bucks)\b",
         r"\b(\d{2,5})\s*(?:ke andar|se kam|tak|kulla|olage|mein)\b",
     ):
@@ -212,21 +272,26 @@ def interpret_rules(raw: str) -> FoodRequest:
             break
 
     # --- diet ----------------------------------------------------------------------------------
+    # Conflicting mentions ("I'm veg ... set diet to non veg") resolve to the safer reading: serving meat to a vegetarian is the
+    # harm, serving vegetarian food to someone who wanted meat is an annoyance. "veg or non veg" means no restriction.
+    mentions: set[str] = set()
+    either = re.search(r"\bveg(?:etarian)?\s*(?:or|and|/|\+)\s*nonveg\b|\bnonveg\s*(?:or|and|/|\+)\s*veg(?:etarian)?\b|\bboth veg\b", t)
     if re.search(r"\bveg(?:etarian)?\s+(?:alla|nahi|nahin|illa)\b", t):
-        req.diet = "nonveg"
+        mentions.add("nonveg")
         t = re.sub(r"\bveg(?:etarian)?\s+(?:alla|nahi|nahin|illa)\b", " ", t)
-    elif not req.groups:
+    if not req.groups:
         if re.search(r"\bnonveg\b", t):
-            req.diet = "nonveg"
-            t = re.sub(r"\bnonveg\b", " ", t)
-        elif re.search(r"\b(?:eggetarian|egg only)\b", t):
-            req.diet = "egg"
-            t = re.sub(r"\b(?:eggetarian|egg only)\b", " ", t)
-        elif re.search(r"\b(?:pure\s+)?(?:veg|vegetarian|vegan|shakahari)\b", t):
-            req.diet = "veg"
-            t = re.sub(r"\b(?:pure\s+)?(?:veg|vegetarian|shakahari)\b", " ", t)
+            mentions.add("nonveg")
+        if re.search(r"\b(?:eggetarian|egg only)\b", t):
+            mentions.add("egg")
+        if re.search(r"\b(?:pure\s+)?(?:veg|vegetarian|vegan|shakahari)\b", t):
+            mentions.add("veg")
+    t = re.sub(r"\b(?:nonveg|eggetarian|egg only)\b", " ", t)
+    t = re.sub(r"\b(?:pure\s+)?(?:veg|vegetarian|shakahari)\b", " ", t)
+    if {"veg", "nonveg"} <= mentions and either:
+        req.diet = None
     else:
-        t = re.sub(r"\b(?:pure\s+)?(?:veg|vegetarian|nonveg)\b", " ", t)
+        req.diet = next((d for d in ("veg", "egg", "nonveg") if d in mentions), None)
 
     # --- spice, sort ---------------------------------------------------------------------------
     mild = r"\b(?:not|less|low|no|kam|nothing)\s+(?:too\s+)?(?:spicy|spice|teekha|khara|masala)\b|\bnon[- ]?spicy\b|\bmild\b|\bbland\b"
@@ -297,7 +362,7 @@ def interpret_rules(raw: str) -> FoodRequest:
                 continue
             if w in FILLER or w in TAG_WORDS or w in SLOT_WORDS and w != "tiffin" or w in {"veg", "nonveg"}:
                 continue
-            if w in EXCLUDE_WORDS and req.exclude:
+            if w in EXCLUDE_WORDS and EXCLUDE_WORDS[w] in req.exclude:      # only words that were *excluded*; 'prawn biryani, no onion' keeps the prawn
                 continue
             mapped = DISH_MAP.get(w, w)
             if mapped:

@@ -1,4 +1,4 @@
-﻿# secrets / local state
+# secrets / local state
 .env
 *.db
 *.db-wal
@@ -14,3 +14,7 @@ __pycache__/
 .vscode/
 .DS_Store
 *.log
+# screen recordings may show personal chats
+*.gif
+*.mp4
+*.webm

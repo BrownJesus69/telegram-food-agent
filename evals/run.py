@@ -12,6 +12,7 @@ import argparse
 import asyncio
 import json
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -181,6 +182,7 @@ async def main_async(modes: list[str], out: Path | None, which: str) -> int:
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")           # the report has arrows and rupee signs; Windows consoles default to cp1252
     ap = argparse.ArgumentParser()
     ap.add_argument("--modes", nargs="+", default=["rules", "llm", "cascade", "full"])
     ap.add_argument("--set", dest="which", choices=["dev", "heldout", "both"], default="both")

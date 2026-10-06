@@ -17,7 +17,11 @@ def backup_db(dest_dir: str | Path | None = None, keep: int = 7) -> Path:
     """Copy the live database to <dest>/foodbot-<utc timestamp>.db without stopping the bot; keep the newest `keep`."""
     dest = Path(dest_dir or config.BACKUP_DIR)
     dest.mkdir(parents=True, exist_ok=True)
-    target = dest / f"foodbot-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')}.db"
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+    target, n = dest / f"foodbot-{stamp}.db", 0
+    while target.exists():            # a coarse clock (Windows) can repeat a timestamp; never overwrite an earlier backup
+        n += 1
+        target = dest / f"foodbot-{stamp}{n:02d}.db"        # '0' sorts after '.', so the newest still sorts last
     src = db.connect()
     try:
         out = sqlite3.connect(target)

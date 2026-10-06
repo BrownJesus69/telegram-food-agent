@@ -53,6 +53,7 @@ class FoodRequest:
     combine: bool = False            # dishes are meant to be ordered together (e.g. "dosa and filter coffee")
     restaurant: str | None = None
     language: str | None = None
+    cautions: list[str] = field(default_factory=list)      # constraints the customer stated that we cannot enforce (set by the rules, never by a model)
     raw: str = ""
     source: str = "rules"
 
@@ -68,21 +69,23 @@ class FoodRequest:
         self.dishes = _dedupe([_short(d) for d in self.dishes if _short(d)])[:4]
         self.cuisine = _pick(self.cuisine, CUISINES)
         self.slot = _pick(self.slot, SLOTS)
-        diet = _DIET_ALIASES.get((self.diet or "").lower(), (self.diet or "").lower())
+        diet = _DIET_ALIASES.get(_text(self.diet), _text(self.diet))
         self.diet = diet if diet in DIETS else None
         self.exclude = [e for e in _dedupe(_lower(self.exclude)) if e in EXCLUDES]
+        if self.diet == "egg" and "egg" in self.exclude:        # "no egg" is an allergy, not "egg only": the allergy wins
+            self.diet = None
         self.tags = [t for t in _dedupe(_lower(self.tags)) if t in TAGS]
-        spice = (self.spice or "").lower()
+        spice = _text(self.spice)
         self.spice = spice if spice in SPICES else None
         self.budget = _bounded(self.budget, 20, 20_000)
         self.budget_scope = self.budget_scope if self.budget_scope in SCOPES else "item"
         self.servings = _bounded(self.servings, 1, 20) or 1
         self.quantity = _bounded(self.quantity, 1, 10) or 1
         groups = []
-        for g in self.groups:
-            d = g.diet if isinstance(g, Group) else (g or {}).get("diet")
-            c = g.count if isinstance(g, Group) else (g or {}).get("count")
-            d = _DIET_ALIASES.get((d or "").lower(), (d or "").lower())
+        for g in self.groups if isinstance(self.groups, (list, tuple)) else []:
+            d = g.diet if isinstance(g, Group) else g.get("diet") if isinstance(g, dict) else None
+            c = g.count if isinstance(g, Group) else g.get("count") if isinstance(g, dict) else None
+            d = _DIET_ALIASES.get(_text(d), _text(d))
             c = _bounded(c, 1, 20)
             if d in DIETS and c:
                 groups.append(Group(d, c))
@@ -92,6 +95,7 @@ class FoodRequest:
         self.sort = self.sort if self.sort in SORTS else "relevance"
         self.combine = bool(self.combine) and len(self.dishes) >= 2
         self.restaurant = _short(self.restaurant) or None
+        self.cautions = [c for c in _dedupe(_lower(self.cautions)) if re.fullmatch(r"[a-z0-9][a-z0-9 \-]{1,29}", c)][:3]
         self.language = self.language if self.language in LANGS else None
         if self.budget and self.servings > 1 and self.budget_scope == "item":
             self.budget_scope = "total"
@@ -134,11 +138,20 @@ class FoodRequest:
 
 # ------------------------------------------------------------------------------ utils
 def _short(s) -> str:
-    return re.sub(r"\s+", " ", str(s or "")).strip().lower()[:60]
+    if isinstance(s, (list, tuple, dict, set)):          # a container is never a dish or restaurant name
+        return ""
+    return re.sub(r"\s+", " ", str(s or "")).lower()[:60].strip()
+
+
+def _text(value) -> str:
+    """A lower-cased string, or '' for anything that is not text (a list or number from a hostile reply)."""
+    return value.strip().lower() if isinstance(value, str) else ""
 
 
 def _lower(xs) -> list[str]:
-    return [str(x).strip().lower() for x in (xs or []) if str(x).strip()]
+    if not isinstance(xs, (list, tuple)):
+        return []
+    return [str(x).strip().lower() for x in xs if str(x).strip()]
 
 
 def _dedupe(xs):
@@ -153,7 +166,7 @@ def _pick(value, allowed):
 def _bounded(value, lo, hi):
     try:
         n = int(float(value))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):          # None, "abc", a list, NaN, infinity
         return None
     return max(lo, min(hi, n)) if n else None
 
@@ -161,7 +174,8 @@ def _bounded(value, lo, hi):
 def from_dict(data: dict, *, raw: str = "", source: str = "llm") -> FoodRequest:
     """Build a request from untrusted JSON (e.g. an LLM reply). Unknown keys are ignored, bad values dropped."""
     data = data if isinstance(data, dict) else {}
-    groups = [Group((g or {}).get("diet", ""), (g or {}).get("count", 0)) for g in (data.get("groups") or []) if isinstance(g, dict)]
+    raw_groups = data.get("groups")
+    groups = [Group(g.get("diet", ""), g.get("count", 0)) for g in (raw_groups if isinstance(raw_groups, (list, tuple)) else []) if isinstance(g, dict)]
     dishes = data.get("dishes")
     if isinstance(dishes, str):
         dishes = [dishes]

@@ -33,12 +33,16 @@ jobs:
         run: python -m pytest
       - name: Concierge evaluation and guardrail (replays recorded LLM replies)
         run: python -m evals.run --out /tmp/results.md
-      - name: Keep the eval report
+      - name: Red-team evaluation (hostile messages; fails if a stated constraint is ever dropped)
+        run: python -m evals.redteam --out /tmp/redteam.md
+      - name: Keep the eval reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eval-results
-          path: /tmp/results.md
+          path: |
+            /tmp/results.md
+            /tmp/redteam.md
 
   docker:
     name: docker image builds and passes its health check

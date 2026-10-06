@@ -3,9 +3,38 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from foodbot.concierge import planner
-from foodbot.concierge.intent import FoodRequest
+from foodbot.concierge import intent, planner
+from foodbot.concierge.intent import FoodRequest, Group
 from foodbot.services import catalogue
+
+
+def schema_problems(req: FoodRequest) -> list[str]:
+    """The boundary invariant: whatever produced this request, every field is an enum value or a bounded number."""
+    bad: list[str] = []
+    checks = {
+        "intent": req.intent in intent.INTENTS,
+        "dishes": len(req.dishes) <= 4 and all(isinstance(d, str) and 0 < len(d) <= 60 for d in req.dishes),
+        "cuisine": req.cuisine is None or req.cuisine in intent.CUISINES,
+        "slot": req.slot is None or req.slot in intent.SLOTS,
+        "diet": req.diet is None or req.diet in intent.DIETS,
+        "exclude": set(req.exclude) <= set(intent.EXCLUDES),
+        "tags": set(req.tags) <= set(intent.TAGS),
+        "spice": req.spice is None or req.spice in intent.SPICES,
+        "budget": req.budget is None or 20 <= req.budget <= 20_000,
+        "budget_scope": req.budget_scope in intent.SCOPES,
+        "sort": req.sort in intent.SORTS,
+        "servings": 1 <= req.servings <= 20,
+        "quantity": 1 <= req.quantity <= 10,
+        "groups": all(isinstance(g, Group) and g.diet in intent.DIETS and 1 <= g.count <= 20 for g in req.groups)
+                  and (not req.groups or len({g.diet for g in req.groups}) >= 2),
+        "language": req.language is None or req.language in intent.LANGS,
+        "egg allergy vs egg-only diet": not (req.diet == "egg" and "egg" in req.exclude),
+    }
+    bad += [f"{name} out of vocabulary" for name, ok in checks.items() if not ok]
+    snapshot = req.to_dict()
+    if req.clean().to_dict() != snapshot:
+        bad.append("clean() is not idempotent")
+    return bad
 
 
 def violations(req: FoodRequest, recs: list[planner.Recommendation], now: datetime | None) -> list[str]:

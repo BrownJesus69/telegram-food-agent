@@ -42,6 +42,14 @@ QUICK_PICKS = {
 DIET_ICON = {"veg": "🟢", "egg": "🟡", "nonveg": "🔴"}
 
 
+def caution_line(req: FoodRequest) -> str:
+    """Be honest about a stated need we cannot filter on (halal, diabetic, 'no mushrooms'...): never imply a guarantee we do not have."""
+    if not req.cautions:
+        return ""
+    things = ", ".join(esc(c) for c in req.cautions)
+    return f"\n⚠️ I can't filter for <b>{things}</b> yet. Please check each dish's details with the kitchen before ordering."
+
+
 def is_admin(user_id, chat_id):
     return user_id in config.ADMIN_IDS or chat_id in config.ADMIN_IDS
 
@@ -259,16 +267,17 @@ async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str
     db.log_event("search", uid, found=len(recs), source=req.source)
 
     ai = " <i>(AI-assisted)</i>" if req.source == "llm" else ""
+    caution = caution_line(req)
     if not recs:
         reply = f"I couldn't find a match for <b>{esc(req.describe())}</b>{ai} delivering to <b>{esc(addr['label'])}</b> right now."
         if hints:
             reply += "\n\n" + "\n".join(f"• {esc(h)}" for h in hints)
-        await msg.answer(reply, reply_markup=kb.change_address("s"))
+        await msg.answer(reply + caution, reply_markup=kb.change_address("s"))
         return
 
     LAST_SHOWN[uid] = [r.restaurant.id for r in recs]
     understood = f"🧠 {esc(req.describe())}{ai}" if req.has_target else f"🧠 It's {slot} time — popular right now"
-    await msg.answer(f"{delivery_header(addr)}\n{understood}\nTop {len(recs)} option(s):", reply_markup=kb.change_address("s"))
+    await msg.answer(f"{delivery_header(addr)}\n{understood}{caution}\nTop {len(recs)} option(s):", reply_markup=kb.change_address("s"))
     for rec in recs:
         if len(rec.lines) == 1:
             markup = kb.select(rec.item.id, rec.lines[0].qty)
@@ -472,19 +481,34 @@ async def cb_noop(cb: CallbackQuery):
     await cb.answer()
 
 
+def _parse_pick(data: str) -> tuple[str, int] | None:
+    """`sel:<item>:<qty>` / `swap:<item>:<qty>` -> (item_id, qty), or None when the callback was not produced by our keyboards."""
+    parts = data.split(":")
+    if len(parts) != 3 or not parts[2].strip().isdecimal():
+        return None
+    qty = int(parts[2])
+    if not 1 <= qty <= orders.MAX_QTY or parts[1] not in catalogue.ITEMS:
+        return None
+    return parts[1], qty
+
+
 @router.callback_query(F.data.startswith("sel:"))
 async def cb_select(cb: CallbackQuery):
+    pick = _parse_pick(cb.data)
+    if not pick:
+        await cb.answer("That button is no longer valid.", show_alert=True)
+        return
     await cb.answer()
-    _, item_id, qty = cb.data.split(":")
+    item_id, qty = pick
     it = get_item(item_id)
     if not it or not it.available:
         await cb.message.answer("Sorry, that item is no longer available.")
         return
     db.log_event("cart_add", cb.from_user.id)
-    if orders.add_item(cb.from_user.id, item_id, int(qty)) == "conflict":
+    if orders.add_item(cb.from_user.id, item_id, qty) == "conflict":
         await cb.message.answer(
             "Your cart has items from another restaurant. Clear it and start a new cart?",
-            reply_markup=kb.swap_cart(item_id, int(qty)),
+            reply_markup=kb.swap_cart(item_id, qty),
         )
         return
     await send_cart(cb.message, cb.from_user.id)
@@ -492,9 +516,16 @@ async def cb_select(cb: CallbackQuery):
 
 @router.callback_query(F.data.startswith("swap:"))
 async def cb_swap(cb: CallbackQuery):
+    pick = _parse_pick(cb.data)
+    if not pick:
+        await cb.answer("That button is no longer valid.", show_alert=True)
+        return
     await cb.answer()
-    _, item_id, qty = cb.data.split(":")
-    orders.add_item(cb.from_user.id, item_id, int(qty), replace=True)
+    try:
+        orders.add_item(cb.from_user.id, *pick, replace=True)
+    except orders.OrderError as e:
+        await cb.message.answer(f"⚠️ {esc(str(e))}")
+        return
     await send_cart(cb.message, cb.from_user.id, edit=False)
 
 

@@ -46,3 +46,23 @@ now returns 404, which silently disabled the first version's LLM fallback), and 
 - Quality is a number we can watch (`python -m evals.run`) and gate in CI; changing the prompt means re-recording the
   cassette (`python -m evals.record`, ~25 minutes on the free tier).
 - Known limits are documented in `evals/RESULTS.md` rather than hidden.
+
+## Amendment (2026-10-07): red-teaming the boundary
+The claim "the worst a hostile message can do is an odd-but-valid request" was only argued, not attacked. Probing it (property
+tests, a 96-case red-team set, forged-callback tests; see [THREAT-MODEL](../THREAT-MODEL.md)) found that the boundary had three
+holes, all fixed:
+
+1. **The model could overrule what the customer stated.** `merge()` preferred the model's diet and budget, so "I'm vegetarian,
+   surprise me" plus a reply of `diet: nonveg` served meat. Decision: *stated beats inferred.* A diet, budget, party size or group
+   found by the rules is authoritative; the model fills blanks and may only *add* exclusions. Conflicting diet words in one
+   message resolve to the safer reading.
+2. **A model could put its own words in the bot's mouth.** Dish and restaurant strings are free text. Decision: every word that
+   survives `normalise_llm` must be in the catalogue vocabulary or in the customer's own message.
+3. **`clean()` was not total.** Arbitrary JSON (`diet: [null]`, `budget: Infinity`) raised; the caller's `try/except` hid it.
+   Decision: `clean()` is total and idempotent over any JSON value, and a test generates hostile replies to keep it so.
+
+Two consequences worth stating:
+- The rules, not the model, are the safety-critical reader, so they are tested like one (held-out phrasings of allergies, diets and
+  budgets; invisible and look-alike characters). The first held-out run failed 16 of 24 cases, which the dev set had hidden.
+- Where the rules *cannot* enforce a stated need (halal, diabetic, an allergen outside the nine modelled), the bot says so rather than
+  staying silent (`FoodRequest.cautions`). Honesty about a limit is cheaper than a guarantee we do not have.
