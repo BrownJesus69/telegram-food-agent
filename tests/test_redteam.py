@@ -87,3 +87,17 @@ async def test_an_unenforceable_need_is_flagged_in_the_chat_and_a_normal_one_is_
     before = len(bot_env.session.texts(CUSTOMER))
     await bot_env.say(CUSTOMER, "masala dosa, no onion no garlic")
     assert "can't filter" not in " ".join(bot_env.session.texts(CUSTOMER)[before:])
+
+
+def test_no_recorded_model_can_make_the_pipeline_drop_a_stated_constraint():
+    """The bake-off's claim: swapping the model changes accuracy and cost, never safety."""
+    from evals import bakeoff
+    from evals import run as ev
+
+    catalogue.load()
+    held, cases = ev.load_golden("heldout"), rt.load_cases()
+    rows = [r for m in bakeoff.MODELS if (r := asyncio.run(bakeoff.evaluate(m, held, cases)))]
+    assert len(rows) >= 2
+    for r in rows:
+        assert r["red_n"] >= 50, f"{r['model']}: too few recorded replies to say anything"
+        assert r["system_failed"] == 0, r["model"]

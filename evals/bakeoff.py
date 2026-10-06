@@ -122,7 +122,18 @@ def render(rows: list[dict]) -> str:
         lat = f"{r['latency_ms']:.0f} ms" if r["latency_ms"] else "n/a"
         out.append(f"| `{r['model']}` | {pct(r['llm_only'], r['held_n'])} | {pct(r['full'], r['held_n'])} | "
                    f"{pct(r['alone_failed'], r['red_n'])} | {pct(r['system_failed'], r['red_n'])} | {tokens} | {lat} |")
-    out += ["", "Each column counts only the messages that model has a recorded reply for; the denominators say how many.", ""]
+    out += ["", "Each column counts only the messages that model has a recorded reply for; the denominators say how many.", "",
+            "## Reading it", "",
+            "- **The model changes accuracy and cost, not safety.** Alone, every model drops or overrides a stated diet, allergen or budget on "
+            "roughly one in six hostile or awkward messages; behind the deterministic reader and the merge rules, none does. Choosing a model is a "
+            "cost, latency and recall decision, which is what the design intended.",
+            "- **Accuracy:** the smaller `qwen/qwen3.8-27b` reads held-out messages better than either gpt-oss model when used alone.",
+            "- **Cost:** it also uses about 40% of the tokens per call (the free tier is 8,000 tokens/minute and 200,000/day per model), so the same "
+            "quota covers roughly 2.5x as many customers, and it answers in about half the time.",
+            "- **Caveats:** one run per model at temperature 0, 48 held-out cases, so differences of a few points are noise. The prompt was written and tuned "
+            "on gpt-oss-20b, which if anything favours it. Tokens and latency for gpt-oss-20b are n/a because its replies were recorded before the harness "
+            "captured them (earlier measurements put it near 1,100 tokens per call). Model availability on the free tier changes; re-record to refresh.",
+            ""]
     return "\n".join(out) + "\n"
 
 
