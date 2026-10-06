@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ParseMode
-from aiogram.methods import EditMessageText, SendMessage
+from aiogram.methods import EditMessageLiveLocation, EditMessageText, SendLocation, SendMessage, StopMessageLiveLocation
 from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User
 
 from foodbot import address_flow
@@ -65,10 +65,19 @@ class RecordingSession(BaseSession):
             chat_id = getattr(method, "chat_id", None) or CUSTOMER
             return Message(message_id=self._mid, date=datetime.now(), chat=Chat(id=chat_id, type="private"),
                            text=getattr(method, "text", ""))
+        if isinstance(method, SendLocation):
+            self._mid += 1
+            return Message(message_id=self._mid, date=datetime.now(), chat=Chat(id=method.chat_id, type="private"),
+                           location=Location(latitude=method.latitude, longitude=method.longitude))
+        if isinstance(method, (EditMessageLiveLocation, StopMessageLiveLocation)):
+            return True
         return True
 
     def texts(self, chat_id=None):
         return [m.text for m in self.sent if isinstance(m, SendMessage) and (chat_id is None or m.chat_id == chat_id)]
+
+    def of(self, cls):
+        return [m for m in self.sent if isinstance(m, cls)]
 
     def last_text(self, chat_id=CUSTOMER):
         t = self.texts(chat_id)

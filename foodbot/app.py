@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from foodbot import address_flow, config, db
+from foodbot import address_flow, config, db, simulator
 from foodbot.handlers import router
 from foodbot.services.catalogue import load
 
@@ -37,10 +37,15 @@ async def main():
     me = await bot.get_me()
     logging.info("Running as @%s", me.username)
 
-    await dp.start_polling(
-        bot,
-        allowed_updates=dp.resolve_used_update_types(),
-    )
+    sim_task = asyncio.create_task(simulator.run(bot)) if config.SIMULATE_DELIVERY else None
+    try:
+        await dp.start_polling(
+            bot,
+            allowed_updates=dp.resolve_used_update_types(),
+        )
+    finally:
+        if sim_task:
+            sim_task.cancel()
 
 
 if __name__ == "__main__":

@@ -60,6 +60,19 @@ CREATE TABLE IF NOT EXISTS order_items(
     unit_price INTEGER NOT NULL,
     FOREIGN KEY(order_id) REFERENCES orders(id)
 );
+CREATE TABLE IF NOT EXISTS order_courier(
+    order_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL, vehicle TEXT NOT NULL, phone TEXT NOT NULL, rating REAL NOT NULL,
+    assigned_at TEXT NOT NULL,
+    pickup_at TEXT, travel_s REAL,
+    live_chat_id INTEGER, live_message_id INTEGER, live_stopped INTEGER NOT NULL DEFAULT 0,
+    last_edit_at TEXT, milestone INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(order_id) REFERENCES orders(id)
+);
+CREATE TABLE IF NOT EXISTS order_messages(
+    order_id INTEGER NOT NULL, chat_id INTEGER NOT NULL, message_id INTEGER NOT NULL, kind TEXT NOT NULL,
+    PRIMARY KEY(order_id, chat_id, kind)
+);
 CREATE TABLE IF NOT EXISTS order_log(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL, status TEXT NOT NULL, note TEXT, at TEXT NOT NULL
@@ -69,7 +82,8 @@ CREATE TABLE IF NOT EXISTS order_log(
 # Columns added after the first release; applied to databases created by older versions.
 MIGRATIONS = {
     "users": {"active_address_id": "INTEGER", "draft": "TEXT"},
-    "orders": {"address_label": "TEXT", "recipient_name": "TEXT", "recipient_phone": "TEXT"},
+    "orders": {"address_label": "TEXT", "recipient_name": "TEXT", "recipient_phone": "TEXT", "rating": "INTEGER",
+               "delivered_at": "TEXT"},
 }
 
 
@@ -265,3 +279,53 @@ def update_recipient(tg_id, address_id, name, phone) -> bool:
         )
     conn.close()
     return True
+
+
+# ------------------------------------------------------------------------ fulfilment
+COURIER_FIELDS = {"pickup_at", "travel_s", "live_chat_id", "live_message_id", "live_stopped", "last_edit_at", "milestone"}
+
+
+def insert_courier(order_id, name, vehicle, phone, rating):
+    conn = connect()
+    with conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO order_courier(order_id,name,vehicle,phone,rating,assigned_at) VALUES(?,?,?,?,?,?)",
+            (order_id, name, vehicle, phone, rating, now()),
+        )
+    conn.close()
+
+
+def get_courier(order_id):
+    conn = connect()
+    row = conn.execute("SELECT * FROM order_courier WHERE order_id=?", (order_id,)).fetchone()
+    conn.close()
+    return row
+
+
+def update_courier(order_id, **fields):
+    for k in fields:
+        if k not in COURIER_FIELDS:
+            raise ValueError(k)
+    sets = ", ".join(f"{k}=?" for k in fields)
+    conn = connect()
+    with conn:
+        conn.execute(f"UPDATE order_courier SET {sets} WHERE order_id=?", (*fields.values(), order_id))
+    conn.close()
+
+
+def save_order_message(order_id, chat_id, message_id, kind):
+    conn = connect()
+    with conn:
+        conn.execute(
+            "INSERT INTO order_messages(order_id,chat_id,message_id,kind) VALUES(?,?,?,?) "
+            "ON CONFLICT(order_id,chat_id,kind) DO UPDATE SET message_id=excluded.message_id",
+            (order_id, chat_id, message_id, kind),
+        )
+    conn.close()
+
+
+def order_messages(order_id, kind):
+    conn = connect()
+    rows = conn.execute("SELECT chat_id, message_id FROM order_messages WHERE order_id=? AND kind=?", (order_id, kind)).fetchall()
+    conn.close()
+    return rows

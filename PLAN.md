@@ -88,3 +88,6 @@ Stretch if time remains: Telegram Mini App map for address pick, photo-of-food o
   explanations), 164-case eval harness with held-out set and grounding gate. Measured: held-out 87.5% (rules) → 91.7% (full
   pipeline); LLM-only 68.8%; 0 guardrail violations. See `evals/RESULTS.md` and ADR 0002.
 - Next: Phase 4 (delivery simulation), Phase 5 (Docker, CI, dashboard), Phase 6 (QA via Chrome, demo script).
+- **2026-10-06 — Phase 4 done:** delivery simulation (kitchen auto-accept/prepare, generated rider with live-location ride,
+  milestone messages, `/track`, ratings, admin cards edited in place). Single `fulfilment.advance()` path for admin, customer
+  and simulator; scheduler is stateless (restart-safe). 12 simulation tests incl. a mutation check.

@@ -26,8 +26,13 @@ def traffic_factor(now: datetime | None = None) -> float:
     return 1.0
 
 
+def travel_minutes(distance_km: float, now: datetime | None = None) -> int:
+    """Door-to-door riding time for the last leg."""
+    return max(MIN_TRAVEL_MIN, round(float(distance_km or 0) * BASE_MIN_PER_KM * traffic_factor(now)))
+
+
 def estimate_eta(distance_km: float, prep_minutes: float = 20, now: datetime | None = None) -> tuple[int, int]:
     """Return (min, max) minutes from order acceptance to doorstep."""
-    travel = max(MIN_TRAVEL_MIN, round(float(distance_km or 0) * BASE_MIN_PER_KM * traffic_factor(now)))
+    travel = travel_minutes(distance_km, now)
     lo = int(round(float(prep_minutes or 20) + travel))
     return lo, lo + BUFFER_MIN

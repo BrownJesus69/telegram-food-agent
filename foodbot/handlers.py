@@ -9,12 +9,13 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from rapidfuzz import fuzz
 
-from foodbot import address_flow, config, db, orders
+from foodbot import address_flow, config, db, fulfilment, orders
 from foodbot import keyboards as kb
 from foodbot.concierge import planner
 from foodbot.concierge.intent import FoodRequest
 from foodbot.concierge.llm import default_client
 from foodbot.concierge.understand import second_opinion, understand
+from foodbot.fulfilment import admin_card, progress_bar
 from foodbot.services import catalogue
 from foodbot.services.catalogue import RESTAURANTS, get_item, get_items_for_restaurant, get_restaurant
 from foodbot.services.distance import haversine_km
@@ -36,13 +37,6 @@ QUICK_PICKS = {
     "snack": ["samosa", "pani puri", "masala chai"],
     "dinner": ["biryani", "kothu parotta", "butter chicken"],
     "latenight": ["chicken roll", "biryani", "masala maggi"],
-}
-
-STATUS_TEXT = {
-    "ACCEPTED": "✅ Order #{id} was accepted. The restaurant is getting started.",
-    "PREPARING": "👨‍🍳 Order #{id} is being prepared.",
-    "OUT_FOR_DELIVERY": "🛵 Order #{id} is out for delivery.",
-    "DELIVERED": "🎉 Order #{id} was delivered. Enjoy your meal!",
 }
 
 DIET_ICON = {"veg": "🟢", "egg": "🟡", "nonveg": "🔴"}
@@ -135,25 +129,6 @@ def cart_text(s):
         f"Subtotal: ₹{s['subtotal']}\nDelivery: ₹{s['fee']}\n<b>Total: ₹{s['total']}</b>\n"
         f"Estimated delivery: {s['eta'][0]}–{s['eta'][1]} min (catalogue estimate)\n"
         f"Payment: cash on delivery"
-    )
-
-
-def admin_card(order, items):
-    lines = "\n".join(f"{i['quantity']} × {i['item_name']} (₹{i['unit_price']})" for i in items)
-    rest = get_restaurant(order["restaurant_id"])
-    maps = f"https://maps.google.com/?q={order['latitude']},{order['longitude']}"
-    return (
-        f"🔔 <b>ORDER #{order['id']}</b> — {esc(order['status'])}\n"
-        f"Restaurant: {esc(rest.name if rest else order['restaurant_id'])}\n"
-        f"Customer: {esc(order['customer_name'] or '-')} (ID {order['customer_id']})\n"
-        f"Deliver to: <b>{esc(order['recipient_name'] or order['customer_name'] or '-')}</b>"
-        f"{' · ' + esc(order['recipient_phone']) if order['recipient_phone'] else ''}\n\n"
-        f"{esc(lines)}\n\n"
-        f"Subtotal ₹{order['subtotal']} · Delivery ₹{order['delivery_fee']} · <b>Total ₹{order['total']}</b>\n"
-        f"Payment: {order['payment_method']}\n"
-        f"Address ({esc(order['address_label'] or 'saved')}): {esc(order['address'] or '-')}\n"
-        f"Landmark: {esc(order['landmark'] or '-')}\n"
-        f"Map: {maps}"
     )
 
 
@@ -334,6 +309,65 @@ async def process_text(m: Message, uid: int, text: str):
     await search_and_show(m, uid, req, text=text)
 
 
+def track_text(order) -> str:
+    rest = get_restaurant(order["restaurant_id"])
+    rider = db.get_courier(order["id"])
+    lines = [f"📦 <b>Order #{order['id']}</b> — {esc(rest.name if rest else order['restaurant_id'])}", progress_bar(order["status"])]
+    if rider:
+        lines.append(f"🛵 {esc(rider['name'])} ({rider['rating']}★) · {esc(rider['vehicle'])}")
+        if order["status"] == "OUT_FOR_DELIVERY" and rider["travel_s"]:
+            lines.append(f"📍 About <b>{fulfilment.minutes_left(order, rider)} min</b> away — see the live location above")
+    if order["status"] in ("PENDING", "ACCEPTED", "PREPARING"):
+        lines.append(f"⏱ Estimated delivery {order['eta_min']}–{order['eta_max']} min after acceptance")
+    lines.append(f"Deliver to: {esc(order['recipient_name'] or '-')} · {esc(order['address_label'] or '')} — {esc(order['address'] or '')}")
+    lines.append(f"Total ₹{order['total']} · cash on delivery")
+    if order["rating"]:
+        lines.append(f"You rated: {'⭐' * int(order['rating'])}")
+    return "\n".join(lines)
+
+
+async def show_tracking(msg: Message, uid: int):
+    rows = orders.orders_of(uid, 5)
+    if not rows:
+        await msg.answer("You have no orders yet. Tell me what you'd like to eat!")
+        return
+    order = next((r for r in rows if r["status"] in orders.ACTIVE), rows[0])
+    await msg.answer(track_text(order), reply_markup=kb.track(order["id"], order["status"] == "PENDING"))
+
+
+_TRACK = re.compile(r"^(?:track|where(?:'s| is)? (?:my )?(?:order|food|delivery)|order status|status|track (?:my )?order|my orders?)\b")
+
+
+@router.message(Command("track"))
+async def cmd_track(m: Message):
+    db.upsert_user(m.from_user.id, m.from_user.full_name)
+    await show_tracking(m, m.from_user.id)
+
+
+@router.callback_query(F.data.startswith("track:"))
+async def cb_track(cb: CallbackQuery):
+    order, _ = orders.get_order(int(cb.data.split(":")[1]))
+    if not order or order["customer_id"] != cb.from_user.id:
+        await cb.answer("Not your order.", show_alert=True)
+        return
+    await cb.answer("Updated")
+    await safe_edit(cb.message, track_text(order), kb.track(order["id"], order["status"] == "PENDING"))
+
+
+@router.callback_query(F.data.startswith("rate:"))
+async def cb_rate(cb: CallbackQuery):
+    _, oid, stars = cb.data.split(":")
+    try:
+        orders.rate_order(int(oid), cb.from_user.id, int(stars))
+    except orders.OrderError as e:
+        await cb.answer(str(e), show_alert=True)
+        return
+    await cb.answer("Thanks!")
+    await safe_edit(cb.message, f"Thanks for rating order #{oid}: {'⭐' * int(stars)}")
+    await fulfilment.notify_admins(cb.bot, f"⭐ Order #{oid} was rated {stars}/5 by the customer.")
+    await fulfilment.refresh_admin_cards(cb.bot, int(oid))
+
+
 @router.message(F.text & ~F.text.startswith("/"))
 async def on_text(m: Message):
     uid = m.from_user.id
@@ -353,6 +387,10 @@ async def on_text(m: Message):
         return
 
     if await address_flow.maybe_handle_intent(m, uid):
+        return
+
+    if _TRACK.match(re.sub(r"\s+", " ", m.text.strip().lower()).strip(" ?!.")):
+        await show_tracking(m, uid)
         return
 
     menu_target = detect_menu_request(m.text)
@@ -527,14 +565,17 @@ async def cb_confirm(cb: CallbackQuery):
     sent = 0
     for admin_id in config.ADMIN_IDS:
         try:
-            await cb.bot.send_message(admin_id, admin_card(order, items), reply_markup=kb.admin(oid, "PENDING"))
+            msg = await cb.bot.send_message(admin_id, admin_card(order, items), reply_markup=kb.admin(oid, "PENDING"))
+            db.save_order_message(oid, admin_id, msg.message_id, "admin_card")
             sent += 1
         except Exception as e:
             log.warning("admin notify failed for %s: %s", admin_id, type(e).__name__)
     text = f"✅ Order #{oid} placed and sent to the restaurant. Waiting for acceptance."
     if not sent:
         text += "\n⚠️ Could not reach the restaurant admin yet; your order is saved."
-    await cb.message.answer(text, reply_markup=kb.customer_cancel(oid))
+    if config.SIMULATE_DELIVERY:
+        text += "\n<i>The kitchen and rider here are simulated; /track shows live progress.</i>"
+    await cb.message.answer(text, reply_markup=kb.track(oid, can_cancel=True))
 
 
 @router.callback_query(F.data.startswith("ucancel:"))
@@ -545,24 +586,12 @@ async def cb_user_cancel(cb: CallbackQuery):
         await cb.answer("Not your order.", show_alert=True)
         return
     try:
-        orders.transition(oid, "CANCELLED", "cancelled by customer")
+        await fulfilment.advance(cb.bot, oid, "CANCELLED", "cancelled by customer", notify=False)
     except orders.OrderError:
         await cb.answer("Too late to cancel here. Please contact the restaurant.", show_alert=True)
         return
     await cb.answer()
     await safe_edit(cb.message, f"Order #{oid} cancelled.")
-    for admin_id in config.ADMIN_IDS:
-        try:
-            await cb.bot.send_message(admin_id, f"⌁ Order #{oid} was cancelled by the customer.")
-        except Exception:
-            pass
-
-
-async def notify_customer(bot, order, text):
-    try:
-        await bot.send_message(order["customer_id"], text)
-    except Exception as e:
-        log.warning("customer notify failed: %s", type(e).__name__)
 
 
 @router.callback_query(F.data.startswith("adm:"))
@@ -571,19 +600,12 @@ async def cb_admin(cb: CallbackQuery):
         await cb.answer("Unauthorized", show_alert=True)
         return
     _, status, oid = cb.data.split(":")
-    oid = int(oid)
     try:
-        orders.transition(oid, status)
+        await fulfilment.advance(cb.bot, int(oid), status, "by restaurant operator")
     except orders.OrderError as e:
         await cb.answer(str(e), show_alert=True)
         return
     await cb.answer(status)
-    order, items = orders.get_order(oid)
-    await safe_edit(cb.message, admin_card(order, items), kb.admin(oid, status))
-    text = STATUS_TEXT[status].format(id=oid)
-    if status == "ACCEPTED":
-        text += f"\nEstimated delivery: {order['eta_min']}–{order['eta_max']} min."
-    await notify_customer(cb.bot, order, text)
 
 
 @router.callback_query(F.data.startswith("rej:"))
@@ -602,14 +624,10 @@ async def cb_reject_reason(cb: CallbackQuery):
         await cb.answer("Unauthorized", show_alert=True)
         return
     _, oid, idx = cb.data.split(":")
-    oid = int(oid)
     reason = kb.REASONS[int(idx)]
     try:
-        orders.transition(oid, "REJECTED", reason)
+        await fulfilment.advance(cb.bot, int(oid), "REJECTED", reason)
     except orders.OrderError as e:
         await cb.answer(str(e), show_alert=True)
         return
     await cb.answer("Rejected")
-    order, items = orders.get_order(oid)
-    await safe_edit(cb.message, admin_card(order, items) + f"\nReason: {esc(reason)}", None)
-    await notify_customer(cb.bot, order, f"Order #{oid} could not be accepted.\nReason: {reason}.\nNo payment was collected.")

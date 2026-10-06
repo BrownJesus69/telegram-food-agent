@@ -191,7 +191,8 @@ def transition(order_id, new_status, note=None):
             if new_status not in FLOW.get(row["status"], set()):
                 raise OrderError(f"Cannot move order from {row['status']} to {new_status}.")
             ts = db.now()
-            conn.execute("UPDATE orders SET status=?, updated_at=? WHERE id=?", (new_status, ts, order_id))
+            conn.execute("UPDATE orders SET status=?, updated_at=?, delivered_at=CASE WHEN ?='DELIVERED' THEN ? ELSE delivered_at END WHERE id=?",
+                         (new_status, ts, new_status, ts, order_id))
             conn.execute("INSERT INTO order_log(order_id, status, note, at) VALUES(?,?,?,?)",
                          (order_id, new_status, note, ts))
         return row
@@ -204,3 +205,49 @@ def recent_orders(limit=10):
     rows = conn.execute("SELECT * FROM orders ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
     conn.close()
     return rows
+
+
+ACTIVE = ("PENDING", "ACCEPTED", "PREPARING", "OUT_FOR_DELIVERY")
+
+
+def active_orders():
+    conn = db.connect()
+    rows = conn.execute(
+        f"SELECT * FROM orders WHERE status IN ({','.join('?' * len(ACTIVE))}) ORDER BY id", ACTIVE
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def orders_of(customer_id, limit=5):
+    conn = db.connect()
+    rows = conn.execute("SELECT * FROM orders WHERE customer_id=? ORDER BY id DESC LIMIT ?", (customer_id, limit)).fetchall()
+    conn.close()
+    return rows
+
+
+def order_log(order_id):
+    conn = db.connect()
+    rows = conn.execute("SELECT status, note, at FROM order_log WHERE order_id=? ORDER BY id", (order_id,)).fetchall()
+    conn.close()
+    return rows
+
+
+def rate_order(order_id, customer_id, stars):
+    """Store a 1-5 rating once, only by the customer, only after delivery."""
+    stars = int(stars)
+    if not 1 <= stars <= 5:
+        raise OrderError("Rating must be 1-5.")
+    conn = db.connect()
+    try:
+        with conn:
+            row = conn.execute("SELECT customer_id, status, rating FROM orders WHERE id=?", (order_id,)).fetchone()
+            if not row or row["customer_id"] != customer_id:
+                raise OrderError("Not your order.")
+            if row["status"] != "DELIVERED":
+                raise OrderError("You can rate an order after it is delivered.")
+            if row["rating"]:
+                raise OrderError("You already rated this order.")
+            conn.execute("UPDATE orders SET rating=? WHERE id=?", (stars, order_id))
+    finally:
+        conn.close()

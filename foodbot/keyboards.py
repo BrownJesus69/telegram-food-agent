@@ -141,3 +141,15 @@ def quick_picks(slot, labels):
     rows = [[B(text=lab, callback_data=f"ask:{slot}:{i}") for i, lab in enumerate(labels)]]
     rows.append([B(text="📍 Change address", callback_data="addr:book:s")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# --------------------------------------------------------------------- tracking and feedback
+def rating(order_id):
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text=f"{n}⭐", callback_data=f"rate:{order_id}:{n}") for n in range(1, 6)]])
+
+
+def track(order_id, can_cancel=False):
+    row = [B(text="🔄 Refresh", callback_data=f"track:{order_id}")]
+    if can_cancel:
+        row.append(B(text="Cancel order", callback_data=f"ucancel:{order_id}"))
+    return InlineKeyboardMarkup(inline_keyboard=[row])
