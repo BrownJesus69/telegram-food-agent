@@ -1,6 +1,6 @@
 """Score the concierge against the golden set.
 
-    python -m evals.run                 # rules, llm (replayed from cassette) and cascade, plus grounding
+    python -m evals.run                 # rules, llm (replayed), cascade and full pipeline, plus grounding
     python -m evals.run --out evals/RESULTS.md
 
 LLM numbers come from recorded replies (evals/cassette.json), so a run is offline, free and deterministic.
@@ -20,7 +20,7 @@ from foodbot.concierge import planner
 from foodbot.concierge.intent import FoodRequest
 from foodbot.concierge.llm import Cassette, GroqClient
 from foodbot.concierge.rules import interpret_rules
-from foodbot.concierge.understand import normalise_llm, understand
+from foodbot.concierge.understand import normalise_llm, second_opinion, understand
 from foodbot.services import catalogue
 
 HERE = Path(__file__).resolve().parent
@@ -76,7 +76,15 @@ async def read(mode: str, text: str, client: GroqClient) -> FoodRequest | None:
     if mode == "llm":
         got = await client.interpret(text)
         return normalise_llm(got, text) if got else None
-    return await understand(text, llm=client)
+    req = await understand(text, llm=client)
+    if mode == "full" and req.source == "rules" and req.has_target:
+        # production also asks the LLM for a second opinion when the rules' reading finds nothing to sell
+        recs = planner.recommend(req, *KORAMANGALA, now=TIMES["noon"], limit=1, current_slot=catalogue.current_slot(TIMES["noon"]))
+        if not recs:
+            better = await second_opinion(text, req, llm=client)
+            if better and better.has_target:
+                req = better
+    return req
 
 
 async def score(mode: str, golden: list[dict], client: GroqClient) -> dict:
@@ -173,7 +181,7 @@ async def main_async(modes: list[str], out: Path | None, which: str) -> int:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--modes", nargs="+", default=["rules", "llm", "cascade"])
+    ap.add_argument("--modes", nargs="+", default=["rules", "llm", "cascade", "full"])
     ap.add_argument("--set", dest="which", choices=["dev", "heldout", "both"], default="both")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args()

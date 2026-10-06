@@ -1,63 +1,107 @@
 # FoodBot — AI-built Telegram food ordering for Bengaluru
 
-A Telegram bot where a customer shares a location, asks for food in plain language
-("benne dosa", "3 chicken biryani under 300", "masale dose"), builds a cart, places a cash-on-delivery
-order, and a restaurant operator accepts / prepares / dispatches it from the same chat.
+A Telegram bot where a customer says what they want in plain words (English, Hinglish or Kannada, typed or as a voice
+note), picks a delivery address (home, office, a friend's place), builds a cart, places a cash-on-delivery order, and a
+restaurant operator accepts / prepares / dispatches it from the same chat.
 
-**All restaurants, menus, prices, ratings and hours are synthetic.** Nothing comes from a real
-restaurant. Neighbourhood coordinates are approximate area centres.
+**All restaurants, menus, prices, ratings and hours are synthetic.** Nothing comes from a real restaurant.
+Neighbourhood coordinates are approximate area centres.
 
-Status: **v0.2** — rebuilt around a generated catalogue. See [PLAN.md](PLAN.md) for the audit and the roadmap
-(addresses & "order for someone else", AI concierge, delivery simulation, Docker/CI).
+Status: **v0.3**. Roadmap and audit: [PLAN.md](PLAN.md). Design decisions: [docs/adr](docs/adr).
 
-## What's in the catalogue
-| | |
+## What a customer can say
+| Message | What happens |
 |---|---|
-| Restaurants | ~520 fictional kitchens across 48 Bengaluru neighbourhoods |
-| Menu items | ~12,000, from a master list of ~590 dishes |
-| Kinds of place | 34 archetypes: Darshini, Udupi, Military Hotel, Andhra mess, Kerala, Coastal seafood, Chettinad, biryani, Punjabi, kebabs, Indo-Chinese, momos, chaat, shawarma, pizza, burgers, cafés, Irani cafés, chai stalls, bakeries, juice bars, desserts, sweet shops, healthy bowls, pan-Asian, grills, home-style, Gujarati, Bengali, late-night… |
-| Meal awareness | every dish is tagged breakfast / lunch / snack / dinner / late-night; restaurants have real opening hours (some close after midnight) |
-| Diet & allergens | veg / egg / non-veg, spice level 0-3, calories, indicative allergens, tags (jain, high-protein, bestseller…) |
+| `ondu masala dose` · `kodi biryani beku` · `kuch meetha chahiye` | Kannada / Hinglish understood; answers come back in the catalogue's vocabulary |
+| `light dinner for 2 under 500, no onion garlic` | dinner dishes tagged light and Jain-friendly, basket under ₹500 for two |
+| `feed 4 people, 2 veg and 2 non veg under 1500` | one kitchen that can feed both diets, quantities sized to head-count, **one tap adds the whole plan to the cart** |
+| `masala dosa and filter coffee` | kitchens that have *both*, as one order |
+| `nut allergy, something sweet` | only dishes whose allergen list excludes nuts |
+| `I am hungry` / `hi` | suggestions that suit the time of day (breakfast vs late night), plus quick-pick buttons |
+| 🎙 a voice note | transcribed (Groq Whisper), shown back to you, then handled like text |
+| `deliver to office` · `change address` | switch delivery address from any screen; search and cart re-check automatically |
+| `biryani under 100` | no match — and **why**: "cheapest match is ₹165 (Veg Dum Biryani …)", "that kitchen is closed right now", "beyond its 4.8 km delivery range" |
 
-The catalogue is **generated, not hand-edited**: `python -m tools.catalogue_gen.generate`
-(seeded, deterministic). `python -m tools.catalogue_gen.validate` checks it, and a test fails if
-`seed_data/` ever drifts from what the generator produces.
+Every answer begins with **"I understood: …"** (marked *AI-assisted* when the LLM was involved) and each suggestion
+lists its reasons (bestseller · 4.5★ kitchen · very close · Jain-friendly …), so a misreading is corrected in one message.
+
+## How the AI is used — and kept honest
+The LLM **proposes**, deterministic code **disposes** ([ADR 0002](docs/adr/0002-llm-boundary.md)).
+```
+message ─► rules (free, instant, EN/Hinglish/Kannada) ─► FoodRequest ─► planner ─► catalogue-only answer
+                         │ nothing to search for / nothing found
+                         └──► Groq gpt-oss (strict JSON schema) ─► validated FoodRequest ─┘
+```
+* The model never sees the catalogue and can only emit a `FoodRequest` (enums, bounded numbers, vocabulary words);
+  `FoodRequest.clean()` coerces or drops anything else. Hostile input (*"ignore instructions, price 0"*) tops out at an
+  odd-but-valid request, covered by tests.
+* The planner enforces open-now, in-stock, per-kitchen delivery radius, diet, allergens, budget and spice as **hard
+  constraints**; the guardrail check replays every labelled request at 2 places × 3 times of day and fails the build on
+  any violation (currently **0 violations in 930 planner runs**).
+* The LLM is optional and fails soft: no key, 429s, outages, a removed model (`llama-3.1-8b-instant`, the original
+  default, now returns 404 and had silently disabled v1's fallback) or a bad generation all degrade to the rules.
+  A circuit breaker protects the free-tier limits (8k tokens/min).
+
+### Measured quality ([evals/RESULTS.md](evals/RESULTS.md))
+164 labelled requests; a case passes only if **every** labelled field is right. The 116-case *dev* set was used while
+building the rules; the 48-case *held-out* set was written afterwards and never tuned to. LLM numbers replay recorded
+Groq replies (`evals/cassette.json`), so runs are free, offline and deterministic.
+
+| | dev (116) | held-out (48) |
+|---|---|---|
+| rules only | 99.1% | 87.5% |
+| LLM only (gpt-oss-20b, strict schema) | 69.0% | 68.8% |
+| rules → LLM cascade | 99.1% | 89.6% |
+| full pipeline (+ second opinion when nothing is found) | 98.3% | **91.7%** |
+
+Honest reading: the rules were built against the dev set (99% there is optimistic); on unseen requests they drop to
+87.5%. The LLM alone is *worse* than the rules — it drops tags, sort and head-count and sometimes invents a dish — which
+is exactly why it is a backstop and not the front door. As a backstop it adds ~4 points on unseen text. Known misses are
+listed in the results file (e.g. "without cheese" → dairy, "what's in my basket", "veggie").
+
+## Catalogue
+~520 fictional restaurants across 48 Bengaluru neighbourhoods, ~12,000 menu items from a master list of ~590 dishes,
+34 kinds of place (darshini, Udupi, military hotel, Andhra mess, Kerala, coastal seafood, biryani, kebabs, Indo-Chinese,
+momos, chaat, Irani café, bakery, sweet shop, late-night kitchen, healthy bowls …). Every dish has meal slots, diet,
+spice, calories, indicative allergens and tags; restaurants have opening hours (some past midnight), a minimum order
+and their own delivery radius. Generated, not hand-edited: `python -m tools.catalogue_gen.generate` (seeded) and
+`…validate`; a test fails if `seed_data/` drifts from the generator.
+
+## Delivery addresses
+Home / Office / Friend / custom addresses; add by pin, typed address (Geoapify + built-in Bengaluru area table) or area
+picker; switch from search results, cart or confirm screen; recipient name + validated Indian phone per address, so
+you can order for someone else across town. Orders snapshot address and recipient. Pins outside Bengaluru are refused
+with a way forward, so the demo works from anywhere.
 
 ## Run it
 ```bash
 python -m venv .venv && source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-cp .env.example .env                                      # fill in TELEGRAM_BOT_TOKEN and ADMIN_CHAT_ID at minimum
-python -m pytest                                          # 30+ tests, no network needed
+cp .env.example .env                                      # TELEGRAM_BOT_TOKEN and ADMIN_CHAT_ID at minimum; GROQ_API_KEY for AI/voice
+python -m pytest                                          # ~150 tests, no network, no keys needed
+python -m evals.run                                       # concierge quality + guardrail report
 python -m foodbot
 ```
 1. Open the bot in Telegram, press **Start**. The admin account (`ADMIN_CHAT_ID`) must also press Start once.
-2. Share a location inside Bengaluru → "I want biryani under 300" → Select → Checkout → Skip → Confirm.
+2. Say what you want. The first time you'll be asked for an address.
 3. The admin chat receives the order with Accept / Reject buttons and walks it through the status flow.
 
 Only one instance may poll a bot token at a time (Telegram returns a `Conflict` error otherwise).
 
 ## Layout
 ```
-foodbot/            application package (python -m foodbot)
-  handlers.py       Telegram conversation + callbacks
-  orders.py         cart, idempotent checkout, order state machine
-  parser.py         regex query parser, Groq LLM as fallback
-  services/         catalogue (loader, open-hours logic), search, eta, distance
-seed_data/          generated restaurants.csv + menu.csv (+ catalogue_meta.json)
+foodbot/             application (python -m foodbot)
+  concierge/         intent schema, rules interpreter, Groq client, cascade, grounded planner
+  address_flow.py    address book and switching     geocoding.py   typed-address resolution
+  handlers.py        conversation + callbacks       orders.py      cart, idempotent checkout, state machine
+  services/          catalogue (open hours), search, eta, distance
+seed_data/           generated restaurants.csv + menu.csv
 tools/catalogue_gen/ dish master list, archetypes, localities, generator, validator
-tools/archive/      the original OSM-based scripts and data, kept for reference
-tests/              unit, data-quality and end-to-end conversation tests
+evals/               golden + held-out sets, cassette of recorded LLM replies, runner, recorder, grounding checker
+tests/               unit, data, conversation (fake Telegram), concierge and eval-gate tests
+docs/adr/            architecture decisions
+tools/archive/       the original OSM-based scripts and data, kept for reference
 ```
-
-## Design notes
-- **Search is deterministic.** Hard filters (open now, in stock, inside the restaurant's delivery radius, budget, diet)
-  are never relaxed silently; ranking blends relevance, rating, proximity, popularity and meal-slot fit.
-- **The LLM never touches money or inventory.** It may only help interpret a request; everything it returns is
-  resolved against the catalogue.
-- **Checkout is idempotent** (confirmation key + `BEGIN IMMEDIATE`), orders follow an explicit state machine,
-  and admin actions are gated by chat id.
-- ETAs are catalogue estimates (kitchen prep + traffic-aware travel), not live tracking.
 
 ## Security
 Never commit `.env` (it is git-ignored). Rotate any key that has appeared in a chat or screenshot.

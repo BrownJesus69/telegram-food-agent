@@ -31,7 +31,7 @@ mujhe chahiye chahie hai ho do kuch bhook lagi hain tha thi aur mein se ka ke ki
 hasivu swalpa sakkath one more another plate plates portion portions piece pieces pcs order orders restaurant restaurants place
 places hotel hotels delivery deliver delivered home office feed feeds serve serving per person people rich aagide aagthide
 aagi ide ittu tell recommend suggest suggestion suggestions choose pick surprise lot lots enough
-liye log logon s t raining rain rainy weather birthday party extra total date nothing too kids kid children jana
+liye log logon s t what whats which where how kya raining rain rainy weather birthday party extra total date nothing too kids kid children jana
 """.split())
 
 # Kannada / Hindi dish words -> catalogue vocabulary

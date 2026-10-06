@@ -1,0 +1,4104 @@
+{
+ "00ec79b3227c1de092277422": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "high protein dinner"
+ },
+ "00fd8f9af5583ab3e1de370e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 400,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 3,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "need breakfast for 3, budget 400"
+ },
+ "01161fef3fa21faaa6a508ea": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "cake"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "eggless cake"
+ },
+ "0130d29f175ba1e82c5331d0": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "meals"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "cheapest",
+   "spice": null,
+   "tags": null
+  },
+  "text": "cheapest veg meals"
+ },
+ "02785e4b19c0dbe746b5e628": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "samosa",
+    "chai"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "do samosa aur chai"
+ },
+ "02962bff95cf31a932458fea": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "for two people, light lunch"
+ },
+ "04bf6f3dee36847938f1266d": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "cart",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "what's in my basket"
+ },
+ "05702f0eb182c32020f3f842": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "gluten"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "gluten free lunch"
+ },
+ "066e03df85e4040db2cc1b03": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dose"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "mixed",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "sihi beku"
+ },
+ "076b8665406202b3d94fb38a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 400,
+   "budget_scope": "item",
+   "combine": null,
+   "cuisine": "pizza",
+   "diet": null,
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "pizza below 400 rupees"
+ },
+ "07f4221e094b5b7beecdcaa2": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "samosa",
+    "chai"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "samosa and chai"
+ },
+ "0cd018b015e18954105e65ab": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "light"
+   ]
+  },
+  "text": "something light for lunch"
+ },
+ "0cf09252347b2addcdc221af": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "bisi bele bath"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "bisi bele bath"
+ },
+ "0e10a8563cd2dc726cc0bf3a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 150,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "lunch under ₹150"
+ },
+ "0f100e4789c6672bab139479": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "bhook lagi hai, kuch teekha khilao"
+ },
+ "0f484f0a50a80c53a1cdac18": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 250,
+   "budget_scope": "total",
+   "combine": false,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "veg lunch"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "healthy"
+   ]
+  },
+  "text": "healthy veg lunch under 250"
+ },
+ "110d005f1452c905b08fcb97": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "sweet"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "mild",
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "my kid wants something sweet and mild"
+ },
+ "14bc232bd070a46ebaeba0f8": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "veggie burger",
+    "fries"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "veggie burger and fries"
+ },
+ "152e032a51221c99daeea424": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "me and my wife, dinner"
+ },
+ "171b3b0acff7e1fc79e5c596": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "dessert",
+   "diet": "veg",
+   "dishes": [
+    "dessert"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "vegan dessert"
+ },
+ "1d215cb6396a63216e486afe": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 100,
+   "budget_scope": "item",
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 3,
+   "restaurant": null,
+   "servings": 3,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "biryani with extra raita for 3, 100 each"
+ },
+ "1dc749de2315481524e16c01": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "something cheap for lunch"
+ },
+ "1e09490b8fe5d4e297499c60": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "south indian",
+   "diet": "veg",
+   "dishes": [
+    "dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "vegetarian south indian breakfast"
+ },
+ "1f329a25b09ac8123d8549ec": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "north indian",
+   "diet": "nonveg",
+   "dishes": [
+    "butter chicken",
+    "naan"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "butter chicken aur naan"
+ },
+ "1f5cc0443c7b3328060ec1c6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "latenight",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "late night biryani for 2"
+ },
+ "2213ddd2e2534350ebf55b8b": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "idli",
+    "vada",
+    "dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "relevance",
+   "spice": null,
+   "tags": null
+  },
+  "text": "I want to eat idli, vada and dosa"
+ },
+ "2384531c693c6c9aaadf4c74": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "something spicy and non veg for dinner"
+ },
+ "2468fac9032e56413b1da0db": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani",
+    "raita"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "biryani with raita"
+ },
+ "26b4eb926a20fce8f8ab361e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kaapi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ondu filter kaapi"
+ },
+ "29b2a8eeaaf7159fbc2f1b99": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 500,
+   "budget_scope": "total",
+   "combine": false,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "chicken biriyani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": 2,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken biriyani 2 plates under 500 total"
+ },
+ "29b987e07c9252dabb26149e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "pizza",
+   "diet": null,
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "jaldi delivery wala pizza"
+ },
+ "29f25fdca06daee20dae2f6f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "meal"
+   ],
+   "exclude": null,
+   "groups": [
+    {
+     "count": 1,
+     "diet": "veg"
+    },
+    {
+     "count": 1,
+     "diet": "nonveg"
+    }
+   ],
+   "intent": "order",
+   "language": "en",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": 2,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "1 veg 1 non veg meal combo for two"
+ },
+ "2a246b5901711e61a782d618": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "south indian breakfast"
+ },
+ "2aa4a28cd590293f17fbf244": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "chicken fried rice"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 2,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "can i get two plates of chicken fried rice"
+ },
+ "2b54864d42c262bf1e380cb2": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ok thanks bye"
+ },
+ "2c31d72bf2f424eb68003634": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "north indian",
+   "diet": "veg",
+   "dishes": [
+    "paneer butter masala",
+    "naan"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "paneer butter masala and naan"
+ },
+ "2d69cdb9c491960e33ab4076": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "mixed",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "kodi biryani beku"
+ },
+ "2d977a3b0f677482094f7dd6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I'm so hungry, feed me something hearty"
+ },
+ "2ee8ebf7b75aa70729b01dbd": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "ragi mudde saaru"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ragi mudde saaru"
+ },
+ "3037388ed370ec8711e15426": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": "veg",
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": [
+    "onion-garlic"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "veg biryani no onion no garlic"
+ },
+ "386b484c37de60ab5ee40781": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "hello"
+ },
+ "38f98e0aad0f625d5b497336": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "chinese",
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chinese for dinner"
+ },
+ "39c682c36605b51f1d83772d": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "comfort"
+   ]
+  },
+  "text": "comfort food"
+ },
+ "3b6c61432a2378fb891e18bf": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 250,
+   "budget_scope": "per_person",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 4,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "4 people lunch, 250 per person"
+ },
+ "3f48e089a1390bf2bdbe07ea": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "north indian",
+   "diet": "veg",
+   "dishes": [
+    "butter naan",
+    "paneer butter masala"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ek butter naan aur paneer butter masala chahiye"
+ },
+ "407e6dcbe5e782266cbbb17d": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 300,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I'm on a diet, light lunch under 300"
+ },
+ "43a557ee10807bdda4e40bf4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": [
+    {
+     "count": 2,
+     "diet": "veg"
+    },
+    {
+     "count": 3,
+     "diet": "nonveg"
+    }
+   ],
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 5,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "family dinner for 5, 2 veg 3 non veg"
+ },
+ "44f3a34629d9cbb948b86589": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kaapi",
+    "oota"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chai aur pakoda shaam ke liye"
+ },
+ "464684c60b7c4fb22b5751dc": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "something sweet"
+ },
+ "46b86934522caab4d3882293": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 350,
+   "budget_scope": "item",
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "paneer tikka masala"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "paneer tikka masala under 350"
+ },
+ "4a0b559050477665af64efcd": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 100,
+   "budget_scope": "item",
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "bisi bele bhath"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "bisi bele bhath 100 olage"
+ },
+ "4b21f1ee441831be046ee715": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "protein meal"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "high-protein"
+   ]
+  },
+  "text": "need a heavy protein meal after gym"
+ },
+ "504a6d6c2f703848031b8dac": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kaapi",
+    "vada"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I'd like some hot filter coffee and a vada"
+ },
+ "51b24fd22f825f3c7855366f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 4,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "4 plain dosa"
+ },
+ "55f024ccdfdf799eccef41e7": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "cheapest",
+   "spice": null,
+   "tags": null
+  },
+  "text": "sasta khana chahiye"
+ },
+ "56a13b818ebd67671d31f5be": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "mutton"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "extra spicy mutton"
+ },
+ "57a95db61794cb90aba5a413": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 150,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "dairy"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "kuch meetha but no dairy, 150 tak"
+ },
+ "5b3c7a510ad7f05e3931ad73": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kaapi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 2,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "order 2 filter coffee"
+ },
+ "5e3a80ac164d149118ef68a1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ok cool bye"
+ },
+ "5eb22c60f5af2672ab572225": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "good morning"
+ },
+ "5ee759291149b0d6ba3680db": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "hot soup"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "comfort"
+   ]
+  },
+  "text": "it's raining, want something hot and comforting"
+ },
+ "617e3fe1c6ad4385f7a16144": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "curry"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "mild",
+   "tags": null
+  },
+  "text": "not too spicy curry"
+ },
+ "6417ac5254135b57f5f7916c": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I am hungry"
+ },
+ "64b33779536c19ea7a2b6f4d": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "onion-garlic"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "jain food for dinner"
+ },
+ "64fd44578cc96559a00fc9b1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "snacks"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 5,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "order for 5 friends, snacks"
+ },
+ "66ea69fa964e98dfe96a1f43": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "non veg biryani"
+ },
+ "69cc432c26e4a3849326f410": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kids snack"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "kids-fav"
+   ]
+  },
+  "text": "kid friendly snack"
+ },
+ "6a60f13d14285ad7ffad0ab4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 2000,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 6,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "dinner for 6 under 2000"
+ },
+ "6a88ca853194fb6ce9bd3a1f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mujhe biryani chahiye"
+ },
+ "6c577ad4dd4d8fd1c626d4fd": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "hasivu aagide, oota beku"
+ },
+ "6c769a504e07505e07fcf96f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dessert"
+   ],
+   "exclude": [
+    "gluten",
+    "dairy"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "gluten free and dairy free dessert"
+ },
+ "6c7c58e6065e51f6d1650823": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 4,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "biryani for 4"
+ },
+ "6ed180f4b2cc7f76ded9e7d5": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "mild",
+   "tags": null
+  },
+  "text": "mild paneer curry"
+ },
+ "6fddaad75c0f1c02f6d78311": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "idli vada"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": 2,
+   "restaurant": null,
+   "servings": 2,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "eradu idli vada"
+ },
+ "7028e72b99d8d9e169a4694e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 300,
+   "budget_scope": "item",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "paneer tikka"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "paneer tikka 300 ke andar"
+ },
+ "70baa13c2b1553ddb88fb7be": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "light"
+   ]
+  },
+  "text": "mujhe kuch light khana hai dinner mein"
+ },
+ "732e2ebbb41937f1bbbf7544": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "other",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "kuch meetha chahiye"
+ },
+ "73c718343cf9bfea797b4345": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "kodi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "veg nahi, kuch chicken"
+ },
+ "744430bac5a608bd7e9b658a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": [
+    {
+     "count": 2,
+     "diet": "veg"
+    },
+    {
+     "count": 2,
+     "diet": "nonveg"
+    }
+   ],
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 4,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "feed 4 people, 2 veg and 2 non veg"
+ },
+ "74b16080c16e686c1f9f507a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "chinese",
+   "diet": null,
+   "dishes": [
+    "gobi manchurian"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "one plate gobi manchurian"
+ },
+ "789b36dee8c9559c7656c1f8": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "meetha mein kya hai"
+ },
+ "79abc29886af0fbe6d30fe0e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    ""
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "namaskara"
+ },
+ "7c5251334456db18cb425a01": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 80,
+   "budget_scope": "total",
+   "combine": false,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "veg snack"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "a quick veg snack under 80"
+ },
+ "7ca47555851adf6af65bcbb6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "lunch for the whole family"
+ },
+ "7d164224d5d8d4deafbbfac1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 120,
+   "budget_scope": "item",
+   "combine": false,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "chicken roll"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken roll max 120 rs"
+ },
+ "7db7475af89a904190ba28b4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 500,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dessert"
+   ],
+   "exclude": [
+    "nuts"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": 4,
+   "slot": null,
+   "sort": "relevance",
+   "spice": null,
+   "tags": null
+  },
+  "text": "dessert for 4 people under 500 total, no nuts"
+ },
+ "7f782c0c312ee9a20e40bd12": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 3000,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 8,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "party of 8, need food under 3000"
+ },
+ "80587a0244009b9b1e0ab870": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dose"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 3,
+   "restaurant": null,
+   "servings": 3,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mooru plate dose"
+ },
+ "856cad9e7e7a64b4affe5d97": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "masala dosa",
+    "idli vada"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "two masala dosa and one idli vada for breakfast"
+ },
+ "8732a3c1e7c083fb93dfcf2f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "idli"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "do you have thatte idli"
+ },
+ "8b25416d553d9b2f59bf46c1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "idli",
+    "dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "idli or dosa"
+ },
+ "8ca8808c561a6e8f4a5d1f8c": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": "nonveg",
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken biryani"
+ },
+ "8fea7843699767dd64a579c2": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "good evening"
+ },
+ "910100f0371f0ccf9f6d54cd": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "nuts"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "healthy"
+   ]
+  },
+  "text": "nut allergy, light dinner"
+ },
+ "9ad0e4d65394d7c4f47132ba": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 250,
+   "budget_scope": "item",
+   "combine": false,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "chicken biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken biryani beku, 250 olage"
+ },
+ "9bfa82c3744d50e3e276e38d": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "thanks"
+ },
+ "9c6dd8950e773c28ead81f64": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "mughlai",
+   "diet": "nonveg",
+   "dishes": [
+    "mutton biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mutton biryani please"
+ },
+ "a0e53d0d4bfe8d767b268e94": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "sasta aur tasty biryani"
+ },
+ "a1e8eec6c3d7d67d1a8689ca": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "burger"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "get me a veg burger"
+ },
+ "a226bb484edb876f9a80f44e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "dinner",
+   "sort": null,
+   "spice": "mild",
+   "tags": null
+  },
+  "text": "date night dinner for two, nothing too spicy"
+ },
+ "a270b5621a0267cb1d88e795": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kaapi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "nearest",
+   "spice": null,
+   "tags": null
+  },
+  "text": "nearest chai"
+ },
+ "a2c0fbe3471d381c1110a7d0": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "italian",
+   "diet": null,
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": [
+    {
+     "count": 3,
+     "diet": "veg"
+    },
+    {
+     "count": 1,
+     "diet": "nonveg"
+    }
+   ],
+   "intent": "order",
+   "language": "en",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": 4,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "3 veg and 1 non veg, pizza"
+ },
+ "a38adb6ae4e3b86426445c7e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "bisi bele bath",
+    "curd rice"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "bisi bele bath mattu curd rice"
+ },
+ "a3c2aade6d094514863d2829": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 900,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 3,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "teen log ke liye dinner, 900 mein"
+ },
+ "a5a3644139b303cd7fec636b": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "nuts",
+    "peanut"
+   ],
+   "groups": null,
+   "intent": "menu",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I'm allergic to peanuts, what dessert do you have"
+ },
+ "a5aaef2d3e32fb7f470037d5": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "pizza",
+   "diet": null,
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "top_rated",
+   "spice": null,
+   "tags": null
+  },
+  "text": "best rated pizza"
+ },
+ "a8eb069357cdfc920109108c": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "dessert",
+   "diet": null,
+   "dishes": [
+    "sweets"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "festive",
+    "sweet"
+   ]
+  },
+  "text": "festive sweets"
+ },
+ "a911a9c2e6b404d17a7722c3": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "idli"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ondu plate idli"
+ },
+ "ad3c997dcc07da2616555294": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": [
+    "onion-garlic"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "no onion no garlic breakfast"
+ },
+ "ae0892aed266357f58e68dd9": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "chicken roll",
+    "egg roll"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 3,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "2 chicken rolls and 1 egg roll"
+ },
+ "af21bd987e1022ed3157f29e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "masala dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I want a masala dosa"
+ },
+ "af84fdef6894f9036549a55f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "mixed",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "relevance",
+   "spice": null,
+   "tags": null
+  },
+  "text": "tell me what's popular right now"
+ },
+ "b2125b462d954ae18065b5db": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "dose",
+    "kaapi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "benne dose mattu kaapi"
+ },
+ "b3430008f442828c71d8277c": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "samosa chaat"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "samosa chaat"
+ },
+ "b565931f5c894094f120965e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "chicken biryani",
+    "mutton biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken biryani or mutton biryani"
+ },
+ "b852089ab6bca53d451449a3": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 2400,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 8,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "office lunch for 8 under 2400 total"
+ },
+ "b96da04e1add9302203134ec": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "thali"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "pure veg thali"
+ },
+ "b986345e30c0e8ed4bcf6729": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "cheapest dosa"
+ },
+ "bb6a77249c8ae4cf18f337de": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "top_rated",
+   "spice": null,
+   "tags": null
+  },
+  "text": "highest rated south indian restaurant"
+ },
+ "be34a69db8e52691692610b8": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "pani puri"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I'm craving pani puri"
+ },
+ "c15d5bd8f41d34b07ae17cd3": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "italian",
+   "diet": "veg",
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": [
+    "dairy"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "veg pizza without cheese"
+ },
+ "c3b22f9df35803d92635598f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "masala dosa",
+    "filter coffee"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "masala dosa and filter coffee"
+ },
+ "c45a08d2b338de91d8450d6f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 5,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "5 people, vegan, dinner"
+ },
+ "c5951e10ac805d276f5b25b1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "dose",
+    "kaapi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": null,
+   "sort": "relevance",
+   "spice": null,
+   "tags": null
+  },
+  "text": "eradu masala dose mattu ondu filter kaapi"
+ },
+ "c81c7de60c283b854fedd30f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 200,
+   "budget_scope": "item",
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "I have only 200 rupees, want biryani"
+ },
+ "c8704c379157b340acf28b4f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 800,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": "chinese",
+   "diet": null,
+   "dishes": [
+    "chinese"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 4,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chinese food for 4 under 800"
+ },
+ "c8a02305dc8fbd904ffb865a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "street food",
+   "diet": null,
+   "dishes": [
+    "snacks"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 12,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "kids-fav"
+   ]
+  },
+  "text": "kids party snacks for 12"
+ },
+ "c8a7f5a297e412cda3373ade": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": [
+    "fish"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "no seafood please, want biryani"
+ },
+ "c9c7c25043598f9dc1019afc": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "north indian",
+   "diet": null,
+   "dishes": [
+    "chole bhature"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "relevance",
+   "spice": null,
+   "tags": null
+  },
+  "text": "show me chole bhature"
+ },
+ "ca0d3ced99b0d724d603db38": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "pandu hasivu",
+    "tindi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "pandu hasivu, swalpa kharada tindi"
+ },
+ "ca589ae21604aaa5d39fdfcc": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "yaar bahut bhook lagi hai kuch spicy khilao"
+ },
+ "cab81dd7d4eef4bbf74fb7de": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "kothu parotta"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "kothu parotta tonight"
+ },
+ "cb13dbf05fcc57a21fd12762": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 300,
+   "budget_scope": "item",
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "biryani under 300"
+ },
+ "cbf07d4ba4e09a304269bc1a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dose"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ondu masala dose"
+ },
+ "cbffc570f359cf36efbb4d6f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "arabian",
+   "diet": "nonveg",
+   "dishes": [
+    "shawarma roll"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "chicken shawarma roll"
+ },
+ "cc60b581f5b61888d9b9b020": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "tiffin"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "sakkath hasivu, tindi beku"
+ },
+ "d17ea3d25f393e940a473c21": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "oota"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "kn",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 3,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mooru jana ge oota"
+ },
+ "d19018886e96ca1190df42c7": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "kodi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "very spicy chicken"
+ },
+ "d28214eeabf807ca0f69a6c3": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "chicken biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "mixed",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "veg alla, chicken biryani beku"
+ },
+ "d2a7fdad1aeb2d30b338b6a1": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": "veg",
+   "dishes": [
+    "thali"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 1,
+   "restaurant": null,
+   "servings": 1,
+   "slot": "lunch",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "one veg thali for lunch"
+ },
+ "d35335f731eac8d289b421f9": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "fastest",
+   "spice": null,
+   "tags": null
+  },
+  "text": "i need food fast"
+ },
+ "d65ce4fe135db915a6035a2e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "menu",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "any good ice cream near me?"
+ },
+ "d7345694d05e038aa59701d6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "ice cream"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "ice cream"
+ },
+ "d974daa96c58d688f90aa66f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 600,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "dinner for 2 under 600"
+ },
+ "db5962b384dd9b5b8f6ee55f": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 100,
+   "budget_scope": "total",
+   "combine": false,
+   "cuisine": "south indian",
+   "diet": null,
+   "dishes": [
+    "masala dosa"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": 3,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "3 masala dosa within 100"
+ },
+ "dee44ceac88aee0e1aadf2d6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": "mughlai",
+   "diet": null,
+   "dishes": [
+    "biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": "fastest",
+   "spice": null,
+   "tags": null
+  },
+  "text": "fastest delivery biryani"
+ },
+ "df7d8fdca38e298df7d4c95e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "greeting",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "hi there"
+ },
+ "e05e4e4bf9099ac18742bb30": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "snack",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "something to munch with my evening chai"
+ },
+ "e3035386a65882a4831e483e": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "italian",
+   "diet": "veg",
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mujhe veg pizza chahiye bina cheese ke"
+ },
+ "e474e79302e0f7390a2968cf": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "other",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "midnight craving"
+ },
+ "e54b8fe56be202742f350531": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": true,
+   "cuisine": "italian",
+   "diet": null,
+   "dishes": [
+    "pizza",
+    "garlic bread"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "pizza and garlic bread"
+ },
+ "e69750eaa9ccc3a4a36a8df4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": "nonveg",
+   "dishes": [
+    "thali"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "non-vegetarian thali"
+ },
+ "e6c777734c7c4cf2f67092c4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "biryani",
+   "diet": "nonveg",
+   "dishes": [
+    "mutton biryani"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 6,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "mutton biryani for 6 people"
+ },
+ "e7455f3cd236817d339f83bb": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 100,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "kuch chatpata snack 100 tak"
+ },
+ "eb74cda5cfb241e7ff82fda6": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 500,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 3,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "budget 500 total for 3 of us dinner"
+ },
+ "edc1b885e506e9db3b90f501": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "cart",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "show my cart"
+ },
+ "f0c33b3ab2d08004a61be739": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "other",
+   "language": "en",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "latenight",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "late night snack"
+ },
+ "f1a6b1ba3c92926e51feaec8": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "tindi"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": "hot",
+   "tags": null
+  },
+  "text": "swalpa khara tindi"
+ },
+ "f3f6c5003aa0c0470dba97a4": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": "italian",
+   "diet": null,
+   "dishes": [
+    "pizza"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "pizza"
+ },
+ "f5d41f5a9ac467f4cac7a9e3": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "light meal"
+   ],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": "hi",
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "raat ke liye light khana, 2 log"
+ },
+ "fa5a9d6af465be339ff4a28a": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": [
+    "dairy"
+   ],
+   "groups": null,
+   "intent": "other",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "lactose intolerant, something sweet"
+ },
+ "fab34ba187710c8a9771d8c9": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": false,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [
+    "dessert"
+   ],
+   "exclude": [
+    "nuts"
+   ],
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 2,
+   "slot": "dinner",
+   "sort": null,
+   "spice": null,
+   "tags": [
+    "sweet"
+   ]
+  },
+  "text": "dessert after dinner for two, nothing nutty"
+ },
+ "fb16b6268bfef1e95d055604": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": null,
+   "budget_scope": null,
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": null,
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": null,
+   "slot": "breakfast",
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "healthy breakfast"
+ },
+ "ff40bd2621821fd25d7bde21": {
+  "model": "openai/gpt-oss-20b",
+  "reply": {
+   "budget": 3000,
+   "budget_scope": "total",
+   "combine": null,
+   "cuisine": null,
+   "diet": null,
+   "dishes": [],
+   "exclude": null,
+   "groups": null,
+   "intent": "order",
+   "language": null,
+   "quantity": null,
+   "restaurant": null,
+   "servings": 10,
+   "slot": null,
+   "sort": null,
+   "spice": null,
+   "tags": null
+  },
+  "text": "birthday party for 10 kids, snacks under 3000 total"
+ }
+}

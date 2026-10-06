@@ -78,3 +78,13 @@ Stretch if time remains: Telegram Mini App map for address pick, photo-of-food o
 - 13 h is tight for B + C + D + E; Phases 0-3, 5 and 6 are the core and 4 is the first to cut.
 - Free LLM tiers can rate-limit mid-demo → the deterministic parser must stay the fallback and the demo script should avoid bursts.
 - Generated restaurant names must not collide with real brands; the generator will use a banned-names list and the README will state data is synthetic.
+
+---
+
+## Progress log
+- **2026-10-06 — Phase 0 + 1 done:** package layout, single search engine, green tests, generated catalogue (522 restaurants, 12,140 items).
+- **2026-10-06 — Phase 2 done:** address book, switch-anywhere, order for someone else, order snapshots.
+- **2026-10-06 — Phase 3 done:** AI concierge (rules + Groq cascade, grounded planner, groups/bundles/allergens, voice notes,
+  explanations), 164-case eval harness with held-out set and grounding gate. Measured: held-out 87.5% (rules) → 91.7% (full
+  pipeline); LLM-only 68.8%; 0 guardrail violations. See `evals/RESULTS.md` and ADR 0002.
+- Next: Phase 4 (delivery simulation), Phase 5 (Docker, CI, dashboard), Phase 6 (QA via Chrome, demo script).

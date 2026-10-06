@@ -73,14 +73,18 @@ def test_grounding_checker_detects_real_violations():
     assert any("closed" in b for b in violations(interpret_rules("x"), good, datetime(2026, 10, 7, 4, 0, tzinfo=catalogue.IST)))
 
 
-def test_cascade_is_at_least_as_good_as_rules_when_cassette_is_complete(sets):
+def test_pipeline_quality_gate_with_recorded_llm(sets):
+    """Replays the recorded Groq replies. Fails if a change makes the cascade worse than rules alone on unseen requests."""
     cassette = Cassette(ev.CASSETTE)
     cases = sets["dev"] + sets["heldout"]
     missing = [c["id"] for c in cases if cassette.get(c["text"]) is None]
     if missing:
         pytest.skip(f"cassette incomplete ({len(missing)} messages unrecorded); run `python -m evals.record`")
+    catalogue.load()
     client = GroqClient(api_key="", cassette=cassette, replay_only=True)
-    for name, cs in sets.items():
-        rules = asyncio.run(ev.score("rules", cs, client))
-        cascade = asyncio.run(ev.score("cascade", cs, client))
-        assert cascade["passed"] >= rules["passed"] - 1, f"{name}: cascade regressed vs rules"
+    scores = {(name, mode): asyncio.run(ev.score(mode, cs, client)) for name, cs in sets.items() for mode in ("rules", "llm", "cascade", "full")}
+    rate = {k: v["passed"] / v["total"] for k, v in scores.items()}
+    assert rate[("heldout", "full")] >= rate[("heldout", "rules")], rate           # the LLM backstop must add value on unseen text
+    assert rate[("heldout", "cascade")] >= rate[("heldout", "rules")] - 0.02, rate
+    assert rate[("dev", "cascade")] >= rate[("dev", "rules")] - 0.02, rate
+    assert rate[("dev", "llm")] >= 0.60 and rate[("heldout", "llm")] >= 0.60, rate  # monitors the model/prompt itself
