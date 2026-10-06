@@ -6,6 +6,8 @@ from foodbot.services.search import closed_matches, search_items
 
 from .conftest import KORAMANGALA, LATE, NOON
 
+pytestmark = pytest.mark.usefixtures("at_koramangala")
+
 
 def _orderable(query="biryani", **kw):
     """First search hit whose restaurant lets a 2-item cart through (so tests don't hard-code ids)."""
@@ -122,7 +124,7 @@ def test_cart_blocks_outside_delivery_radius():
     hit = _orderable()
     orders.add_item(1, hit.item.id, 2)
     db.set_location(1, 13.1189, 77.7267, "far away")      # north-east edge of the city
-    assert any("delivery area" in i for i in orders.cart_summary(1)["issues"])
+    assert any("doesn't deliver" in i for i in orders.cart_summary(1)["issues"])
 
 
 def test_minimum_order_enforced():

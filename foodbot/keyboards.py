@@ -29,6 +29,7 @@ def cart(lines):
             B(text="+", callback_data=f"inc:{ln['item_id']}"),
         ])
     rows.append([B(text="Checkout", callback_data="checkout"), B(text="Clear cart", callback_data="clear")])
+    rows.append([B(text="📍 Change address", callback_data="addr:book:c")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -37,10 +38,10 @@ def skip_landmark():
 
 
 def confirm(key):
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        B(text="Confirm COD order", callback_data=f"confirm:{key}"),
-        B(text="Cancel", callback_data="clear"),
-    ]])
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [B(text="Confirm COD order", callback_data=f"confirm:{key}"), B(text="Cancel", callback_data="clear")],
+        [B(text="📍 Change address", callback_data="addr:book:k"), B(text="👤 Change recipient", callback_data="addr:rcpt:k")],
+    ])
 
 
 def customer_cancel(order_id):
@@ -66,3 +67,66 @@ def reject_reasons(order_id):
     return InlineKeyboardMarkup(inline_keyboard=[
         [B(text=r, callback_data=f"rr:{order_id}:{i}")] for i, r in enumerate(REASONS)
     ])
+
+
+# ------------------------------------------------------------------ addresses
+LABEL_ICON = {"home": "🏠", "office": "🏢", "work": "🏢", "friend": "👥"}
+
+
+def label_icon(label):
+    low = (label or "").lower()
+    for key, icon in LABEL_ICON.items():
+        if low.startswith(key):
+            return icon
+    return "📍"
+
+
+def _short(text, n=42):
+    text = (text or "").replace(chr(10), " ")
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def change_address(ctx):
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text="📍 Change address", callback_data=f"addr:book:{ctx}")]])
+
+
+def address_book(addresses, active_id, ctx):
+    rows = []
+    for a in addresses:
+        mark = "✓ " if a["id"] == active_id else ""
+        rows.append([B(text=f"{mark}{label_icon(a['label'])} {a['label']} — {_short(a['address'])}",
+                       callback_data=f"addr:use:{a['id']}:{ctx}")])
+    rows.append([B(text="➕ Add new address", callback_data=f"addr:new:{ctx}")])
+    if addresses:
+        rows.append([B(text="🗑 Remove an address", callback_data="addr:manage")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def manage_addresses(addresses):
+    rows = [[B(text=f"🗑 {a['label']} — {_short(a['address'], 30)}", callback_data=f"addr:del:{a['id']}")] for a in addresses]
+    rows.append([B(text="⬅ Back", callback_data="addr:book:a")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def label_choice():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [B(text="🏠 Home", callback_data="addr:lbl:home"), B(text="🏢 Office", callback_data="addr:lbl:office")],
+        [B(text="👥 A friend / family", callback_data="addr:lbl:friend"), B(text="✏️ Other", callback_data="addr:lbl:other")],
+        [B(text="Cancel", callback_data="addr:cancel")],
+    ])
+
+
+def place_candidates(places):
+    rows = [[B(text=f"{i + 1}. {_short(p[0], 55)}", callback_data=f"addr:pick:{i}")] for i, p in enumerate(places)]
+    rows.append([B(text="Cancel", callback_data="addr:cancel")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def areas(names):
+    rows = [[B(text=n, callback_data=f"addr:area:{n}") for n in names[i:i + 2]] for i in range(0, len(names), 2)]
+    rows.append([B(text="Cancel", callback_data="addr:cancel")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def skip_phone():
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text="Skip phone number", callback_data="addr:skipphone")]])

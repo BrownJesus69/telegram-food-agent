@@ -1,136 +1,61 @@
-"""End-to-end conversation tests: real handlers + real database, with Telegram's HTTP layer replaced by a recorder."""
-from datetime import datetime
+"""End-to-end conversation tests: real handlers + real database, Telegram's HTTP layer replaced by a recorder."""
+from foodbot import db, orders
+from foodbot.services import catalogue
 
-import pytest
-from aiogram import Bot, Dispatcher
-from aiogram.client.session.base import BaseSession
-from aiogram.methods import EditMessageText, SendMessage
-from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User
-
-from foodbot import config, db, orders
-from foodbot.handlers import router
-
+from .bot_harness import ADMIN, CUSTOMER
 from .conftest import KORAMANGALA
-
-CUSTOMER, ADMIN = 1, 999
-
-
-class RecordingSession(BaseSession):
-    def __init__(self):
-        super().__init__()
-        self.sent: list = []
-        self._mid = 100
-
-    async def close(self):
-        pass
-
-    async def stream_content(self, *a, **kw):
-        yield b""
-
-    async def make_request(self, bot, method, timeout=None):
-        self.sent.append(method)
-        if isinstance(method, (SendMessage, EditMessageText)):
-            self._mid += 1
-            return Message(message_id=self._mid, date=datetime.now(), chat=Chat(id=method.chat_id if hasattr(method, "chat_id") and method.chat_id else CUSTOMER, type="private"),
-                           text=getattr(method, "text", ""))
-        return True
-
-    def texts(self, chat_id=None):
-        return [m.text for m in self.sent if isinstance(m, SendMessage) and (chat_id is None or m.chat_id == chat_id)]
-
-    def buttons(self, chat_id=None):
-        out = []
-        for m in self.sent:
-            if isinstance(m, SendMessage) and (chat_id is None or m.chat_id == chat_id):
-                kb = getattr(m, "reply_markup", None)
-                for row in getattr(kb, "inline_keyboard", []) or []:
-                    out += [b.callback_data for b in row if b.callback_data]
-        return out
-
-
-@pytest.fixture
-def bot_env(monkeypatch):
-    monkeypatch.setattr(config, "ADMIN_IDS", {ADMIN})
-    session = RecordingSession()
-    bot = Bot("123456:TEST", session=session)
-    dp = Dispatcher()
-    router._parent_router = None          # the module-level router is reused across tests; aiogram forbids re-attaching
-    dp.include_router(router)
-    return dp, bot, session
-
-
-def _user(uid):
-    return User(id=uid, is_bot=False, first_name="Tester" if uid == CUSTOMER else "Admin")
-
-
-def _msg(uid, text=None, location=None, mid=1):
-    entities = [MessageEntity(type="bot_command", offset=0, length=len(text.split()[0]))] if text and text.startswith("/") else None
-    return Message(message_id=mid, date=datetime.now(), chat=Chat(id=uid, type="private"), from_user=_user(uid),
-                   text=text, entities=entities, location=location)
-
-
-async def say(env, uid, text):
-    dp, bot, _ = env
-    await dp.feed_update(bot, Update(update_id=1, message=_msg(uid, text)))
-
-
-async def press(env, uid, data):
-    dp, bot, _ = env
-    cb = CallbackQuery(id="cb1", from_user=_user(uid), chat_instance="ci", data=data, message=_msg(uid, "x"))
-    await dp.feed_update(bot, Update(update_id=2, callback_query=cb))
 
 
 async def test_full_order_journey(bot_env):
-    """start -> location -> search -> select -> checkout -> confirm -> admin accepts -> customer is told."""
-    _, _, session = bot_env
-    await say(bot_env, CUSTOMER, "/start")
+    """start -> pin -> label -> search -> select -> checkout -> confirm -> admin accepts -> customer is told."""
+    env, session = bot_env, bot_env.session
+    await env.say(CUSTOMER, "/start")
     assert any("simulated" in t for t in session.texts(CUSTOMER))
+    assert any("location pin" in t for t in session.texts(CUSTOMER))          # no address yet: asked for one
 
-    dp, bot, _ = bot_env
-    await dp.feed_update(bot, Update(update_id=3, message=_msg(CUSTOMER, location=Location(latitude=KORAMANGALA[0], longitude=KORAMANGALA[1]))))
-    assert any("Location saved" in t for t in session.texts(CUSTOMER))
+    await env.send_location(CUSTOMER, *KORAMANGALA)
+    assert "What should I call this address" in session.last_text()
+    await env.press(CUSTOMER, "addr:lbl:home")
+    assert any("Saved. Delivering to" in t for t in session.texts(CUSTOMER))
 
-    await say(bot_env, CUSTOMER, "3 chicken biryani under 300")
-    sel = next(b for b in session.buttons(CUSTOMER) if b.startswith("sel:"))
+    await env.say(CUSTOMER, "3 chicken biryani under 300")
+    assert any("Delivering to" in t and "Home" in t for t in session.texts(CUSTOMER))
+    sel = env.button("sel:")
     assert sel.endswith(":3")
-    await press(bot_env, CUSTOMER, sel)
+    await env.press(CUSTOMER, sel)
     assert any("Your cart" in t for t in session.texts(CUSTOMER))
 
-    await press(bot_env, CUSTOMER, "checkout")
-    await press(bot_env, CUSTOMER, "skip_landmark")
-    confirm = [b for b in session.buttons(CUSTOMER) if b.startswith("confirm:")][-1]
-    await press(bot_env, CUSTOMER, confirm)
-    await press(bot_env, CUSTOMER, confirm)                              # double tap must not create a second order
+    await env.press(CUSTOMER, "checkout")
+    await env.press(CUSTOMER, "skip_landmark")
+    confirm = env.button("confirm:")
+    assert "Recipient:" in session.last_text() and "Home" in session.last_text()
+    await env.press(CUSTOMER, confirm)
+    await env.press(CUSTOMER, confirm)                                       # double tap must not create a second order
     assert len(orders.recent_orders(10)) == 1
     assert any("ORDER #1" in t for t in session.texts(ADMIN))
 
-    accept = next(b for b in session.buttons(ADMIN) if b.startswith("adm:ACCEPTED"))
-    await press(bot_env, CUSTOMER, accept)                               # a customer pressing admin buttons is refused
+    accept = env.button("adm:ACCEPTED", ADMIN)
+    await env.press(CUSTOMER, accept)                                        # a customer pressing admin buttons is refused
     assert orders.get_order(1)[0]["status"] == "PENDING"
-    await press(bot_env, ADMIN, accept)
+    await env.press(ADMIN, accept)
     assert orders.get_order(1)[0]["status"] == "ACCEPTED"
     assert any("was accepted" in t for t in session.texts(CUSTOMER))
 
 
-async def test_search_requires_location_first(bot_env):
-    _, _, session = bot_env
-    await say(bot_env, CUSTOMER, "/start")
-    await say(bot_env, CUSTOMER, "biryani")
-    assert any("share your location" in t.lower() for t in session.texts(CUSTOMER))
+async def test_search_requires_an_address_first(bot_env):
+    env, session = bot_env, bot_env.session
+    await env.say(CUSTOMER, "biryani")
+    assert any("Where should I deliver" in t for t in session.texts(CUSTOMER))
 
 
 async def test_show_menu_by_restaurant_name(bot_env):
-    _, _, session = bot_env
-    from foodbot.services import catalogue
+    env, session = bot_env, bot_env.session
     rest = next(iter(catalogue.RESTAURANTS.values()))
-    await say(bot_env, CUSTOMER, "/start")
-    await say(bot_env, CUSTOMER, f"show me menu of {rest.name}")
+    await env.say(CUSTOMER, f"show me menu of {rest.name}")
     assert any(rest.name in t and "₹" in t for t in session.texts(CUSTOMER))
 
 
 async def test_unknown_dish_gets_helpful_message(bot_env):
-    _, _, session = bot_env
-    db.upsert_user(CUSTOMER, "Tester")
     db.set_location(CUSTOMER, *KORAMANGALA, "x")
-    await say(bot_env, CUSTOMER, "xylophone")
-    assert any("couldn't find" in t for t in session.texts(CUSTOMER))
+    await bot_env.say(CUSTOMER, "xylophone")
+    assert any("couldn't find" in t for t in bot_env.session.texts(CUSTOMER))

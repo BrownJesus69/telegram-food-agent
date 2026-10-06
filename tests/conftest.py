@@ -24,6 +24,21 @@ def env(tmp_path, monkeypatch):
     # tests must never touch the network or depend on the developer's real keys
     monkeypatch.setattr(config, "GROQ_API_KEY", "")
     monkeypatch.setattr(config, "GEOAPIFY_API_KEY", "")
+    from foodbot import handlers
+    handlers.LAST_QUERY.clear()          # module-level per-user memory must not leak between tests
+    handlers.LAST_SHOWN.clear()
     db.init_db()
     db.upsert_user(1, "Tester")
+
+
+@pytest.fixture
+def at_koramangala():
+    """User 1 has a saved delivery address in Koramangala."""
     db.set_location(1, *KORAMANGALA, "Test address")
+
+
+@pytest.fixture
+def bot_env(monkeypatch):
+    from tests.bot_harness import ADMIN, BotEnv
+    monkeypatch.setattr(config, "ADMIN_IDS", {ADMIN})
+    return BotEnv()

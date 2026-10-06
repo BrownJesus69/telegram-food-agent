@@ -6,10 +6,10 @@ import uuid
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
-from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, Message
 from rapidfuzz import fuzz
 
-from foodbot import config, db, geo, orders, parser
+from foodbot import address_flow, config, db, orders, parser
 from foodbot import keyboards as kb
 from foodbot.services import catalogue
 from foodbot.services.catalogue import RESTAURANTS, get_item, get_items_for_restaurant, get_restaurant
@@ -22,6 +22,8 @@ esc = html.escape
 
 # last restaurants shown to each user, so "show menu" with no name means "the first one I just saw"
 LAST_SHOWN: dict[int, list[str]] = {}
+# the last parsed food request per user, so switching address can re-run it
+LAST_QUERY: dict[int, parser.ParsedQuery] = {}
 
 STATUS_TEXT = {
     "ACCEPTED": "✅ Order #{id} was accepted. The restaurant is getting started.",
@@ -58,7 +60,7 @@ def detect_menu_request(text: str):
     return None
 
 
-def find_restaurant(name: str, uid: int, user=None):
+def find_restaurant(name: str, uid: int):
     """Resolve a typed restaurant name against the catalogue; ties go to the one nearest the user."""
     target = (name or "").strip().lower()
     if not target:
@@ -66,13 +68,13 @@ def find_restaurant(name: str, uid: int, user=None):
     if target == "__last__":
         ids = LAST_SHOWN.get(uid) or []
         return get_restaurant(ids[0]) if ids else None
-    has_loc = bool(user) and user["latitude"] is not None
+    here = db.location_of(uid)
     scored = []
     for rest in RESTAURANTS.values():
         rn = rest.name.lower()
         score = 100 if rn == target else max(fuzz.WRatio(target, rn), 90 if target in rn else 0)
         if score >= 80:
-            dist = haversine_km(user["latitude"], user["longitude"], rest.lat, rest.lon) if has_loc else 0.0
+            dist = haversine_km(here[0], here[1], rest.lat, rest.lon) if here else 0.0
             scored.append((-score, dist, rest.id, rest))
     scored.sort(key=lambda x: x[:3])
     return scored[0][3] if scored else None
@@ -130,11 +132,13 @@ def admin_card(order, items):
     return (
         f"🔔 <b>ORDER #{order['id']}</b> — {esc(order['status'])}\n"
         f"Restaurant: {esc(rest.name if rest else order['restaurant_id'])}\n"
-        f"Customer: {esc(order['customer_name'] or '-')} (ID {order['customer_id']})\n\n"
+        f"Customer: {esc(order['customer_name'] or '-')} (ID {order['customer_id']})\n"
+        f"Deliver to: <b>{esc(order['recipient_name'] or order['customer_name'] or '-')}</b>"
+        f"{' · ' + esc(order['recipient_phone']) if order['recipient_phone'] else ''}\n\n"
         f"{esc(lines)}\n\n"
         f"Subtotal ₹{order['subtotal']} · Delivery ₹{order['delivery_fee']} · <b>Total ₹{order['total']}</b>\n"
         f"Payment: {order['payment_method']}\n"
-        f"Address: {esc(order['address'] or '-')}\n"
+        f"Address ({esc(order['address_label'] or 'saved')}): {esc(order['address'] or '-')}\n"
         f"Landmark: {esc(order['landmark'] or '-')}\n"
         f"Map: {maps}"
     )
@@ -166,18 +170,24 @@ async def send_cart(msg, tg_id, edit=False):
 @router.message(Command("help"))
 async def start(m: Message):
     db.upsert_user(m.from_user.id, m.from_user.full_name)
+    db.set_field(m.from_user.id, awaiting=None)
+    db.set_draft(m.from_user.id, None)
     slot = catalogue.current_slot()
     await m.answer(
         "👋 Hi! I find food from Bengaluru kitchens near you — all restaurants and menus here are simulated.\n"
-        "Share your location, then tell me what you want — e.g. <i>I am hungry, I want biryani under 300</i>.\n"
+        "Tell me what you want — e.g. <i>I am hungry, I want biryani under 300</i> — and where to deliver: "
+        "your current spot, your office, or a friend's place.\n"
+        "Commands: /address change delivery address · /cart your cart\n"
         f"<i>Right now it's {slot} time in Bengaluru.</i>",
         reply_markup=kb.location_request(),
     )
+    if not db.get_active_address(m.from_user.id):
+        await address_flow.begin_add(m, m.from_user.id, "s")
 
 
 @router.message(Command("location"))
 async def ask_location(m: Message):
-    await m.answer("Tap the button to share your delivery location.", reply_markup=kb.location_request())
+    await address_flow.show_book(m, m.from_user.id, "a")
 
 
 @router.message(Command("cart"))
@@ -196,14 +206,53 @@ async def admin_orders(m: Message):
     await m.answer("\n".join(f"#{r['id']} · {r['status']} · ₹{r['total']} · {r['created_at']}" for r in rows))
 
 
-@router.message(F.location)
-async def got_location(m: Message):
-    db.upsert_user(m.from_user.id, m.from_user.full_name)
-    lat, lon = m.location.latitude, m.location.longitude
-    label = await geo.reverse_geocode(lat, lon)
-    db.set_location(m.from_user.id, lat, lon, label)
-    where = f"\n📍 {esc(label)}" if label else ""
-    await m.answer(f"Location saved.{where}\nWhat would you like to eat?", reply_markup=ReplyKeyboardRemove())
+def delivery_header(addr) -> str:
+    return f"📍 Delivering to {address_flow.describe(addr)}"
+
+
+async def search_and_show(msg: Message, uid: int, q: parser.ParsedQuery, *, text: str | None = None):
+    """Search for what the customer asked at their active address and present the results."""
+    addr = db.get_active_address(uid)
+    if not addr:
+        await msg.answer("Where should I deliver? Choose or add an address first.", reply_markup=kb.change_address("s"))
+        return
+    lat, lon = addr["latitude"], addr["longitude"]
+    results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS) if q.dish else []
+
+    if not results and text:
+        q2 = await parser.groq_extract(text)
+        if q2 and q2.dish:
+            q = q2
+            results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS)
+
+    if not q.dish:
+        await msg.answer("What would you like to eat? Example: <i>chicken biryani under 300</i>")
+        return
+    LAST_QUERY[uid] = q
+
+    if not results:
+        reply = f"I couldn't find “{esc(q.dish)}” open and delivering to <b>{esc(addr['label'])}</b> right now."
+        later = closed_matches(q.dish, lat, lon, budget=q.budget, diet=q.diet)
+        if later:
+            reply += "\n\nThese match but are closed at the moment:\n" + "\n".join(
+                f"• {esc(r.restaurant.name)} (opens {r.restaurant.hours_label.split(' – ')[0]})" for r in later
+            )
+        await msg.answer(reply + "\n\nTry a different address, or another dish.", reply_markup=kb.change_address("s"))
+        return
+
+    LAST_SHOWN[uid] = [r.restaurant.id for r in results]
+    await msg.answer(f"{delivery_header(addr)}\nTop {len(results)} option(s):", reply_markup=kb.change_address("s"))
+    for r in results:
+        await msg.answer(result_text(r), reply_markup=kb.select(r.item.id, q.qty))
+
+
+async def rerun_last_search(msg: Message, uid: int):
+    q = LAST_QUERY.get(uid)
+    if q and q.dish:
+        await msg.answer(f"Re-checking “{esc(q.dish)}” for your new address…")
+        await search_and_show(msg, uid, q)
+    else:
+        await msg.answer(f"📍 Delivering to {address_flow.describe(db.get_active_address(uid))}\nWhat would you like to eat?")
 
 
 @router.message(F.text & ~F.text.startswith("/"))
@@ -221,47 +270,27 @@ async def on_text(m: Message):
         await show_confirm(m, uid)
         return
 
+    if user["awaiting"] in address_flow.AWAITING and await address_flow.handle_text(m, user):
+        return
+
+    if await address_flow.maybe_handle_intent(m, uid):
+        return
+
     menu_target = detect_menu_request(m.text)
     if menu_target:
-        rest = find_restaurant(menu_target, uid, user)
+        rest = find_restaurant(menu_target, uid)
         if not rest:
             await m.answer("I couldn't find that restaurant. Try: <i>show me menu of Darshini</i>, or search for a dish first.")
             return
         await m.answer(build_menu_text_for_restaurant(rest))
         return
 
-    if user["latitude"] is None:
-        await m.answer("Please share your location first.", reply_markup=kb.location_request())
+    if not db.get_active_address(uid):
+        await m.answer("Where should I deliver? Share a pin, type an address, or pick an area.", reply_markup=kb.location_request())
+        await address_flow.begin_add(m, uid, "s")
         return
 
-    q = parser.parse(m.text)
-    lat, lon = user["latitude"], user["longitude"]
-    results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS) if q.dish else []
-
-    if not results:
-        q2 = await parser.groq_extract(m.text)
-        if q2 and q2.dish:
-            q = q2
-            results = search_items(q.dish, lat, lon, budget=q.budget, diet=q.diet, limit=config.MAX_SEARCH_RESULTS)
-
-    if not q.dish:
-        await m.answer("What would you like to eat? Example: <i>chicken biryani under 300</i>")
-        return
-
-    if not results:
-        text = f"I couldn't find “{esc(q.dish)}” open and delivering to you right now."
-        later = closed_matches(q.dish, lat, lon, budget=q.budget, diet=q.diet)
-        if later:
-            text += "\n\nThese match but are closed at the moment:\n" + "\n".join(
-                f"• {esc(r.restaurant.name)} (opens {r.restaurant.hours_label.split(' – ')[0]})" for r in later
-            )
-        await m.answer(text)
-        return
-
-    LAST_SHOWN[uid] = [r.restaurant.id for r in results]
-    await m.answer(f"Top {len(results)} option(s) near you:")
-    for r in results:
-        await m.answer(result_text(r), reply_markup=kb.select(r.item.id, q.qty))
+    await search_and_show(m, uid, parser.parse(m.text), text=m.text)
 
 
 @router.callback_query(F.data == "noop")
@@ -343,13 +372,15 @@ async def cb_skip(cb: CallbackQuery):
 async def show_confirm(msg, uid):
     s = orders.cart_summary(uid)
     if not s or not s.get("lines") or s["issues"]:
-        await msg.answer("⚠️ " + esc(" ".join((s or {}).get("issues", ["Your cart is empty."]))))
+        await msg.answer("⚠️ " + esc(" ".join((s or {}).get("issues", ["Your cart is empty."]))), reply_markup=kb.change_address("c"))
         return
     key = uuid.uuid4().hex[:16]
     db.set_field(uid, pending_key=key)
     user = db.get_user(uid)
+    addr = s["address"]
     text = cart_text(s)
-    text += f"\n\nDeliver to: {esc(user['address'] or 'your shared location')}"
+    text += f"\n\nDeliver to: {address_flow.describe(addr)}"
+    text += f"\nRecipient: {address_flow.recipient_line(addr, user['name'])}"
     text += f"\nInstructions: {esc(user['landmark'] or '-')}"
     await msg.answer(text, reply_markup=kb.confirm(key))
 

@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from foodbot import config, db
+from foodbot import address_flow, config, db
 from foodbot.handlers import router
 from foodbot.services.catalogue import load
 
@@ -29,6 +29,7 @@ async def main():
     )
 
     dp = Dispatcher()
+    dp.include_router(address_flow.router)   # location pins + addr:* callbacks
     dp.include_router(router)
 
     await bot.delete_webhook(drop_pending_updates=False)

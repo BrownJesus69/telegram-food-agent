@@ -237,6 +237,18 @@ def load(data_dir=None):
     return len(RESTAURANTS), len(ITEMS)
 
 
+def localities() -> dict[str, tuple[float, float, int]]:
+    """Neighbourhood -> (centre lat, centre lon, restaurant count), derived from the loaded catalogue."""
+    acc: dict[str, list[float]] = {}
+    for r in RESTAURANTS.values():
+        if r.locality:
+            a = acc.setdefault(r.locality, [0.0, 0.0, 0])
+            a[0] += r.lat
+            a[1] += r.lon
+            a[2] += 1
+    return {k: (v[0] / v[2], v[1] / v[2], int(v[2])) for k, v in acc.items()}
+
+
 def get_restaurant(restaurant_id: str) -> Restaurant | None:
     return RESTAURANTS.get(restaurant_id)
 
