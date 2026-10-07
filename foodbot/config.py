@@ -15,6 +15,8 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL).strip()
 GROQ_STT_MODEL = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo").strip()
 MIN_MATCH = int(os.getenv("MIN_MATCH", "70"))
 MAX_SEARCH_RESULTS = int(os.getenv("MAX_SEARCH_RESULTS", "5"))
+# Public https URL of the map-picker Mini App (miniapp/index.html, e.g. on GitHub Pages). Empty = the "Pick on map" button is not offered.
+MINIAPP_URL = os.getenv("MINIAPP_URL", "").strip()
 # DB_PATH is canonical; DATABASE_PATH is accepted because older .env files used it.
 DB_PATH = os.getenv("DB_PATH") or os.getenv("DATABASE_PATH") or str(BASE_DIR / "foodbot.db")
 DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "seed_data"))

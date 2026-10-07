@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Pick delivery location</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+      integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
+<style>
+  /* Colours come from Telegram's theme (it injects --tg-theme-* variables); the fallbacks cover plain browsers. */
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --fg: var(--tg-theme-text-color, #1c1c1e);
+    --hint: var(--tg-theme-hint-color, #6b6b70);
+    --panel: var(--tg-theme-secondary-bg-color, #f2f2f7);
+    --accent: var(--tg-theme-button-color, #2481cc);
+    --accent-fg: var(--tg-theme-button-text-color, #ffffff);
+    --danger: #d93025;
+    --ok: #1e8e3e;
+    --tile-filter: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: var(--tg-theme-bg-color, #17212b);
+      --fg: var(--tg-theme-text-color, #f5f5f5);
+      --hint: var(--tg-theme-hint-color, #8a99a8);
+      --panel: var(--tg-theme-secondary-bg-color, #232e3c);
+      --danger: #ff6b60;
+      --ok: #5bd17a;
+      --tile-filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--tg-theme-bg-color, #17212b);
+    --fg: var(--tg-theme-text-color, #f5f5f5);
+    --hint: var(--tg-theme-hint-color, #8a99a8);
+    --panel: var(--tg-theme-secondary-bg-color, #232e3c);
+    --danger: #ff6b60;
+    --ok: #5bd17a;
+    --tile-filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    height: 100vh; height: 100dvh;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overscroll-behavior: none;
+  }
+  #map { flex: 1 1 0; min-height: 140px; background: var(--panel); }
+  .leaflet-tile-pane { filter: var(--tile-filter); }
+  .leaflet-container { font-family: inherit; font-size: 12px; }
+
+  /* Pin drawn in CSS so the page needs no image files. */
+  .pin { position: relative; width: 32px; height: 42px; }
+  .pin::before {
+    content: ""; position: absolute; left: 4px; top: 0; width: 24px; height: 24px;
+    background: var(--accent); border: 3px solid #fff; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0,0,0,.45);
+  }
+  .pin::after {
+    content: ""; position: absolute; left: 12px; top: 8px; width: 8px; height: 8px;
+    background: #fff; border-radius: 50%;
+  }
+  .pin.bad::before { background: var(--danger); }
+
+  .panel {
+    flex: 0 0 auto;
+    background: var(--bg);
+    padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--panel);
+  }
+  .hint { margin: 0 0 2px; color: var(--hint); font-size: 14px; }
+  .coords {
+    margin: 0 0 4px; font-size: 18px; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: .01em;
+  }
+  .status { margin: 0 0 8px; min-height: 2.8em; font-size: 14px; }
+  .status.ok { color: var(--ok); }
+  .status.bad { color: var(--danger); font-weight: 600; }
+  button#use {
+    width: 100%; min-height: 52px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-fg);
+    font: inherit; font-size: 17px; font-weight: 600; cursor: pointer;
+  }
+  button#use:disabled { opacity: .45; cursor: not-allowed; }
+  button#use:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+  noscript { display: block; padding: 16px; }
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Map. Tap anywhere to move the pin."></div>
+<div class="panel">
+  <p class="hint" id="hint">Tap the map or drag the pin.</p>
+  <p class="coords" id="coords" aria-label="Selected coordinates">&ndash;</p>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <button id="use" type="button" disabled>Use this location</button>
+</div>
+<noscript>This map needs JavaScript.</noscript>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+        integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Service area. Keep in sync with foodbot/geocoding.py BENGALURU_BBOX (tests/test_miniapp.py checks it).
+  // The bot re-checks every pick; this only saves the customer a round trip.
+  var BBOX = { latMin: 12.80, latMax: 13.16, lonMin: 77.45, lonMax: 77.80 };
+  var CENTRE = [12.9716, 77.5946];            // Bengaluru
+
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var inTelegram = !!(tg && typeof tg.sendData === "function" && tg.initData);
+
+  var coordsEl = document.getElementById("coords");
+  var statusEl = document.getElementById("status");
+  var useBtn = document.getElementById("use");
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;          // textContent only: nothing dynamic ever goes through innerHTML
+    statusEl.className = "status" + (cls ? " " + cls : "");
+  }
+
+  // ---- theme ---------------------------------------------------------------------------------------------
+  function applyTheme() {
+    if (!tg) { return; }
+    var root = document.documentElement;
+    root.setAttribute("data-theme", tg.colorScheme === "dark" ? "dark" : "light");
+    try {
+      var p = tg.themeParams || {};
+      if (p.bg_color && tg.setBackgroundColor) { tg.setBackgroundColor(p.bg_color); }
+      if (p.bg_color && tg.setHeaderColor) { tg.setHeaderColor(p.bg_color); }
+    } catch (e) { /* older clients: colours are cosmetic */ }
+  }
+  if (tg) {
+    try { tg.ready(); tg.expand(); } catch (e) { /* ignore */ }
+    applyTheme();
+    try { tg.onEvent("themeChanged", applyTheme); } catch (e) { /* ignore */ }
+  }
+
+  // ---- map -----------------------------------------------------------------------------------------------
+  if (typeof L === "undefined") {
+    setStatus("The map could not load. Check your connection and reopen it.", "bad");
+    return;
+  }
+
+  var map = L.map("map", { zoomControl: true, attributionControl: true }).setView(CENTRE, 12);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Dashed outline of where we deliver.
+  L.rectangle([[BBOX.latMin, BBOX.lonMin], [BBOX.latMax, BBOX.lonMax]],
+              { color: "#2481cc", weight: 1.5, dashArray: "6 6", fill: false, interactive: false }).addTo(map);
+
+  var pinIcon = L.divIcon({ className: "", html: '<div class="pin"></div>', iconSize: [32, 42], iconAnchor: [16, 42] });
+  var marker = L.marker(CENTRE, { draggable: true, icon: pinIcon, keyboard: true, title: "Delivery pin" }).addTo(map);
+
+  function inArea(lat, lon) {
+    return lat >= BBOX.latMin && lat <= BBOX.latMax && lon >= BBOX.lonMin && lon <= BBOX.lonMax;
+  }
+
+  var current = { lat: CENTRE[0], lon: CENTRE[1] };
+
+  function update(latlng) {
+    // Leaflet can report longitudes beyond +-180 after wrapping; normalise before anything is shown or sent.
+    var ll = latlng.wrap();
+    current = { lat: ll.lat, lon: ll.lng };
+    coordsEl.textContent = current.lat.toFixed(5) + ", " + current.lon.toFixed(5);
+
+    var ok = inArea(current.lat, current.lon);
+    var el = marker.getElement();
+    if (el && el.firstChild) { el.firstChild.classList.toggle("bad", !ok); }
+
+    if (!ok) {
+      setStatus("This pin is outside Bengaluru. We only deliver inside the dashed area.", "bad");
+    } else if (!inTelegram) {
+      setStatus("Preview only. Open this from the bot's “Pick on map” button.", "");
+    } else {
+      setStatus("Inside our delivery area.", "ok");
+    }
+    useBtn.disabled = !(ok && inTelegram);
+  }
+
+  marker.on("dragend", function () { update(marker.getLatLng()); });
+  marker.on("drag", function () { coordsEl.textContent = marker.getLatLng().lat.toFixed(5) + ", " + marker.getLatLng().lng.toFixed(5); });
+  map.on("click", function (e) { marker.setLatLng(e.latlng); update(e.latlng); });
+  update(marker.getLatLng());
+
+  // ---- send ----------------------------------------------------------------------------------------------
+  useBtn.addEventListener("click", function () {
+    if (useBtn.disabled || !inTelegram || !inArea(current.lat, current.lon)) { return; }
+    useBtn.disabled = true;
+    var payload = JSON.stringify({
+      lat: Math.round(current.lat * 1e6) / 1e6,
+      lon: Math.round(current.lon * 1e6) / 1e6
+    });
+    try {
+      tg.sendData(payload);               // delivers to the bot as a service message and closes the app
+      tg.close();
+    } catch (e) {
+      setStatus("Could not send the location. Close this window and try again.", "bad");
+      useBtn.disabled = false;
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -7,7 +7,9 @@ Each address carries a recipient (name + phone), and an order snapshots the addr
 from __future__ import annotations
 
 import html
+import json
 import logging
+import math
 import re
 
 from aiogram import F, Router
@@ -213,7 +215,57 @@ async def cmd_address(m: Message):
 async def got_location(m: Message):
     uid = m.from_user.id
     db.upsert_user(uid, m.from_user.full_name)
-    lat, lon = m.location.latitude, m.location.longitude
+    await _handle_pin(m, uid, m.location.latitude, m.location.longitude)
+
+
+MAX_WEBAPP_PAYLOAD = 256          # bytes; the page sends ~40, so anything bigger is not our page
+
+
+def parse_miniapp_pin(raw) -> tuple[float, float] | None:
+    """Validate the Mini App's sendData() payload. It is client-controlled, so treat it as hostile input.
+
+    Accepts only a small JSON object {"lat": <number>, "lon": <number>} with finite values inside the valid
+    coordinate ranges. Returns None for anything else (never raises). Whether the point is in Bengaluru is
+    decided afterwards by the same check a shared GPS pin goes through.
+    """
+    if not isinstance(raw, str) or len(raw.encode("utf-8", "ignore")) > MAX_WEBAPP_PAYLOAD:
+        return None
+    try:
+        data = json.loads(raw)
+    except (ValueError, RecursionError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    out = []
+    for key, limit in (("lat", 90.0), ("lon", 180.0)):
+        v = data.get(key)
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            return None
+        try:
+            v = float(v)
+        except OverflowError:
+            return None
+        if not math.isfinite(v) or abs(v) > limit:
+            return None
+        out.append(round(v, 6))
+    return out[0], out[1]
+
+
+@router.message(F.web_app_data)
+async def got_miniapp_pin(m: Message):
+    pin = parse_miniapp_pin(m.web_app_data.data)
+    if pin is None:
+        log.warning("rejected malformed web_app_data (%d chars)", len(m.web_app_data.data or ""))
+        await m.answer("I couldn't read that map pick. Please open the map and try again, or share a pin / type the address.")
+        return
+    uid = m.from_user.id
+    db.upsert_user(uid, m.from_user.full_name)
+    await m.answer("🗺 Got your pin.", reply_markup=ReplyKeyboardRemove())     # the map button has done its job
+    await _handle_pin(m, uid, *pin)
+
+
+async def _handle_pin(m: Message, uid: int, lat: float, lon: float):
+    """Shared by a Telegram location pin and the map Mini App: same Bengaluru check, same label/recipient steps."""
     if not geocoding.in_bengaluru(lat, lon):
         await m.answer(
             "📍 That pin is outside Bengaluru — my restaurants only cover Bengaluru. "

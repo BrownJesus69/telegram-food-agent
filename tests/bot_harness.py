@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ParseMode
 from aiogram.methods import EditMessageLiveLocation, EditMessageText, SendLocation, SendMessage, StopMessageLiveLocation
-from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User
+from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User, WebAppData
 
 from foodbot import address_flow
 from foodbot.app import build_dispatcher
@@ -119,10 +119,11 @@ class BotEnv:
     def user(uid):
         return User(id=uid, is_bot=False, first_name="Tester" if uid == CUSTOMER else "Admin")
 
-    def _msg(self, uid, text=None, location=None):
+    def _msg(self, uid, text=None, location=None, web_app_data=None):
         ents = [MessageEntity(type="bot_command", offset=0, length=len(text.split()[0]))] if text and text.startswith("/") else None
         return Message(message_id=self._next(), date=datetime.now(), chat=Chat(id=uid, type="private"),
-                       from_user=self.user(uid), text=text, entities=ents, location=location)
+                       from_user=self.user(uid), text=text, entities=ents, location=location,
+                       web_app_data=web_app_data)
 
     async def say(self, uid, text):
         await self.dp.feed_update(self.bot, Update(update_id=self._next(), message=self._msg(uid, text)))
@@ -130,6 +131,11 @@ class BotEnv:
     async def send_location(self, uid, lat, lon):
         await self.dp.feed_update(self.bot, Update(update_id=self._next(),
                                   message=self._msg(uid, location=Location(latitude=lat, longitude=lon))))
+
+    async def send_web_app_data(self, uid, data):
+        """Deliver what a reply-keyboard Mini App passed to Telegram.WebApp.sendData()."""
+        wad = WebAppData(data=data, button_text="Pick on map")
+        await self.dp.feed_update(self.bot, Update(update_id=self._next(), message=self._msg(uid, web_app_data=wad)))
 
     async def press(self, uid, data):
         cb = CallbackQuery(id=str(self._next()), from_user=self.user(uid), chat_instance="ci", data=data,
