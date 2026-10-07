@@ -177,9 +177,9 @@ async def test_hostile_payload_does_not_disturb_a_pending_address_step(bot_env):
 
 
 def test_miniapp_and_bot_agree_on_the_service_area():
-    """miniapp/index.html hard-codes the bounding box; it must match the bot's, or the page would offer unusable pins."""
+    """docs/miniapp/index.html hard-codes the bounding box; it must match the bot's, or the page would offer unusable pins."""
     from pathlib import Path
-    page = (Path(__file__).resolve().parent.parent / "miniapp" / "index.html").read_text(encoding="utf-8")
+    page = (Path(__file__).resolve().parent.parent / "docs" / "miniapp" / "index.html").read_text(encoding="utf-8")
     lat_min, lat_max, lon_min, lon_max = geocoding.BENGALURU_BBOX
     for value in (lat_min, lat_max, lon_min, lon_max):
-        assert f"{value:.2f}" in page, f"{value} missing from miniapp/index.html"
+        assert f"{value:.2f}" in page, f"{value} missing from docs/miniapp/index.html"

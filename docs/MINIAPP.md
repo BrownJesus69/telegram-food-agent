@@ -6,7 +6,7 @@ or a building the geocoder does not know. It is one static HTML file, no build s
 ## How it works
 
 ```
- address prompt                    Mini App (miniapp/index.html)            bot
+ address prompt                    Mini App (docs/miniapp/index.html)            bot
  ┌──────────────────────┐  tap     ┌───────────────────────────┐  sendData  ┌──────────────────────────┐
  │ [📍 Share location]  │ ───────► │ Leaflet + OpenStreetMap   │ ─────────► │ F.web_app_data handler   │
  │ [🗺 Pick on map]     │          │ tap / drag the pin        │  {lat,lon} │ parse + validate         │
@@ -33,10 +33,8 @@ The repo is already on GitHub, so Pages is the zero-cost option. Telegram requir
 
 1. Repository **Settings → Pages**.
 2. **Source: Deploy from a branch**, branch `main`, folder **`/docs`** (the only folders Pages offers are `/` and `/docs`).
-   The page lives in `miniapp/`, so either:
-   - copy it: `docs/map/index.html` (then the URL is `https://<user>.github.io/<repo>/map/`), or
-   - choose the root `/` and use `https://<user>.github.io/<repo>/miniapp/`. This also publishes the other repo
-     files; fine for a public repo, but prefer the `/docs` copy if that bothers you.
+   The page lives in `docs/miniapp/`, so the URL is `https://<user>.github.io/<repo>/miniapp/` (the whole `docs/` folder is published,
+   which is fine for a public repo; `docs/.nojekyll` turns off Jekyll processing).
 3. Wait for the first deploy, open the URL in a browser (you should see the map and a "Preview only" note: it only
    becomes usable inside Telegram).
 4. Put the URL in `.env`:
@@ -50,7 +48,6 @@ The repo is already on GitHub, so Pages is the zero-cost option. Telegram requir
 
 No BotFather configuration is needed: a Mini App opened from a reply-keyboard button needs no registered short name.
 
-If you keep a copy under `docs/`, keep it identical to `miniapp/index.html`.
 
 ## Privacy
 
@@ -84,7 +81,7 @@ A valid-looking but false location (someone picks a pin that is not theirs) is n
 because customers can order for someone else. The delivery address is confirmed by the customer on the confirm screen
 before an order is placed.
 
-The bounding box is duplicated in `miniapp/index.html` (`BBOX`); `tests/test_miniapp.py` fails if it drifts from
+The bounding box is duplicated in `docs/miniapp/index.html` (`BBOX`); `tests/test_miniapp.py` fails if it drifts from
 `foodbot/geocoding.py::BENGALURU_BBOX`.
 
 ## Tests
