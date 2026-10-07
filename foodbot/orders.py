@@ -350,6 +350,7 @@ def reorder_plan(tg_id, order_id, now: datetime | None = None) -> ReorderPlan:
     if blocked:
         return ReorderPlan(order_id, order["restaurant_id"], (), tuple(DroppedLine(n, q, blocked) for _, n, q in wanted), blocked)
 
+    assert rest is not None            # a missing kitchen was reported as `blocked` above
     kept, dropped = [], []
     for item_id, name, qty in wanted:
         it = catalogue.ITEMS.get(item_id)

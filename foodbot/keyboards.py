@@ -2,7 +2,6 @@ from aiogram.types import InlineKeyboardButton as B
 from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
 
 from foodbot import config
-
 from foodbot.billing import BUTTON_PEOPLE
 
 

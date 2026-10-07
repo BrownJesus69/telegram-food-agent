@@ -12,7 +12,12 @@ GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY", "").strip()
 # Chosen by measurement (evals/BAKEOFF.md): best held-out accuracy of the free Groq models at ~40% of the tokens per call.
 DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
 GROQ_MODEL = os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL).strip()
-GROQ_STT_MODEL = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo").strip()
+GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", DEFAULT_GROQ_MODEL).strip()      # must accept image_url content (the gpt-oss models do not)
+PHOTO_BURST = float(os.getenv("PHOTO_BURST", "3"))                           # per-user photo reads in a burst ...
+PHOTO_PER_SECOND = float(os.getenv("PHOTO_PER_SECOND", "0.05"))              # ... refilled at one per 20 s (each read costs ~2,000 free-tier tokens)
+PHOTO_GLOBAL_BURST = float(os.getenv("PHOTO_GLOBAL_BURST", "3"))             # across all customers: about 3 reads a minute keeps text under the 8k tokens/min cap
+PHOTO_GLOBAL_PER_SECOND = float(os.getenv("PHOTO_GLOBAL_PER_SECOND", "0.05"))
+GROQ_STT_MODEL =os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo").strip()
 MIN_MATCH = int(os.getenv("MIN_MATCH", "70"))
 MAX_SEARCH_RESULTS = int(os.getenv("MAX_SEARCH_RESULTS", "5"))
 # Public https URL of the map-picker Mini App (miniapp/index.html, e.g. on GitHub Pages). Empty = the "Pick on map" button is not offered.

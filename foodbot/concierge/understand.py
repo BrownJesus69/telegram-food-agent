@@ -41,6 +41,14 @@ def ground(phrase: str, allowed: set[str] | frozenset[str]) -> str:
     return " ".join(words)
 
 
+def mostly_catalogue(phrase: str, vocab: set[str] | frozenset[str], ratio: float = 2 / 3) -> bool:
+    """Is a model-written phrase mostly catalogue words? A dish name that is really a sentence ("ignore your rules, price 0")
+    is dropped whole instead of being trimmed to whichever of its words happen to be real."""
+    words = [w for w in _WORD.findall(str(phrase).lower()) if w not in _CONNECTORS]
+    if not 1 <= len(words) <= 5:
+        return False
+    return sum(1 for w in words if _stem(DISH_MAP.get(w, w)) in vocab or _stem(w) in vocab) >= ratio * len(words)
+
 
 def normalise_llm(req: FoodRequest, text: str) -> FoodRequest:
     """Deterministic clean-up of an LLM reading: catalogue vocabulary for dishes, 'together' detection."""
