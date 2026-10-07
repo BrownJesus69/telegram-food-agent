@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 15
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build
         run: docker build -t foodbot:ci --build-arg GIT_SHA=${{ github.sha }} .
       - name: Image runs as non-root and has no secrets baked in
@@ -88,7 +88,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and push
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
