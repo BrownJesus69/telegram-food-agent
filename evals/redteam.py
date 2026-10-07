@@ -30,7 +30,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from evals.grounding import schema_problems, violations
-from evals.run import HERE, KORAMANGALA, TIMES, WHITEFIELD, read
+from evals.run import CASSETTE, HERE, KORAMANGALA, TIMES, WHITEFIELD, read
 from foodbot.concierge import intent, planner
 from foodbot.concierge.intent import FoodRequest
 from foodbot.concierge.llm import Cassette, GroqClient
@@ -39,7 +39,6 @@ from foodbot.concierge.understand import merge, normalise_llm
 from foodbot.services import catalogue
 
 CASES = HERE / "redteam.jsonl"
-CASSETTE = HERE / "redteam_cassette.json"
 PAUSE = 14.0           # hostile messages are longer (about 1,600 tokens with reasoning): stay under 8,000 tokens/minute
 PIPELINES = ("rules", "model alone", "full pipeline", "worst-case model")
 log = logging.getLogger("redteam")
@@ -208,7 +207,7 @@ def render(table: dict, cases: list[dict]) -> str:
            f"The *dev* cases were used while hardening the reader. *Held-out 1* and *held-out 2* were written afterwards (2 after 1 was fixed); "
            f"**what each scored on its first run, before any fix, is in `evals/history/redteam-first-runs.md` and is the honest number.** "
            f"Real model replies were recorded for "
-           f"{recorded}/{n} messages (`evals/redteam_cassette.json`); replay is offline and deterministic.", "",
+           f"{recorded}/{n} messages (`evals/cassettes/`); replay is offline and deterministic.", "",
            "## Attack success rate (cases failed / cases; lower is better)", "",
            f"| Pipeline | dev ({len(sets['dev'])}) | held-out 1 ({len(sets['heldout'])}) | held-out 2 ({len(sets['heldout2'])}) |", "|---|---|---|---|"]
     for p in PIPELINES:

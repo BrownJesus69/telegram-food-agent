@@ -9,7 +9,9 @@ load_dotenv(BASE_DIR / ".env", encoding="utf-8")
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+# Chosen by measurement (evals/BAKEOFF.md): best held-out accuracy of the free Groq models at ~40% of the tokens per call.
+DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
+GROQ_MODEL = os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL).strip()
 GROQ_STT_MODEL = os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo").strip()
 MIN_MATCH = int(os.getenv("MIN_MATCH", "70"))
 MAX_SEARCH_RESULTS = int(os.getenv("MAX_SEARCH_RESULTS", "5"))

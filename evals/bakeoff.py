@@ -40,27 +40,13 @@ def cassette_path(model: str) -> Path:
 
 
 def texts() -> list[str]:
-    return [c["text"] for c in ev.load_golden("heldout")] + [c["text"] for c in rt.load_cases()]
-
-
-def seed_from_existing(model: str):
-    """The production model was already recorded for these messages (evals/cassette.json and redteam_cassette.json)."""
-    path = cassette_path(model)
-    if path.exists() or model != "openai/gpt-oss-20b":
-        return
-    mine = Cassette(path)
-    wanted = set(texts())
-    for source in (ev.CASSETTE, rt.CASSETTE):
-        for entry in Cassette(source).data.values():
-            if entry["text"] in wanted and mine.get(entry["text"]) is None:
-                mine.put(entry["model"], entry["text"], entry["reply"])
+    return [c["text"] for c in ev.load_golden("heldout")] + [c["text"] for c in rt.load_cases()] + [c["text"] for c in ev.load_golden("dev")]
 
 
 async def record(models: list[str], pause: float | None):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     for model in models:
-        seed_from_existing(model)
         cassette = Cassette(cassette_path(model))
         client = GroqClient(model=model, cassette=cassette, record=True, timeout=40)
         client.models = [model]                                  # a bake-off must not silently fall back to another model

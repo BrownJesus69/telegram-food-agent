@@ -66,3 +66,11 @@ Two consequences worth stating:
   budgets; invisible and look-alike characters). The first held-out run failed 16 of 24 cases, which the dev set had hidden.
 - Where the rules *cannot* enforce a stated need (halal, diabetic, an allergen outside the nine modelled), the bot says so rather than
   staying silent (`FoodRequest.cautions`). Honesty about a limit is cheaper than a guarantee we do not have.
+
+## Amendment (2026-10-07): the production model is chosen by measurement
+The first model (`openai/gpt-oss-20b`) was picked because it was the first free Groq model with strict JSON schemas. A bake-off on the same
+cases ([evals/BAKEOFF.md](../../evals/BAKEOFF.md)) showed `qwen/qwen3.8-27b` reads held-out messages better alone (83% vs 67%) using about 40% of
+the tokens per call (428 vs 1,128) in about half the time, and on its own free quota. Because of the boundary above, every model scores 0%
+through the pipeline on the red-team set, so the switch is a cost, latency and recall decision, not a safety one. Changes: `config.DEFAULT_GROQ_MODEL`,
+the recorded replies the evals replay are now the production model's (`evals/cassettes/qwen_qwen3.8-27b.json`), and the previous model stays
+as a fallback after qwen (`llm.DEFAULT_MODELS`). Held-out accuracy of the full pipeline went from 91.7% to 93.8%.

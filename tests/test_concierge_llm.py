@@ -50,7 +50,9 @@ async def test_removed_model_falls_back_to_the_next_one():
 
     c = GroqClient(api_key="k", model="llama-3.1-8b-instant", transport=httpx.MockTransport(handler))
     assert await c.interpret("biryani") is not None
-    assert seen == ["llama-3.1-8b-instant", "openai/gpt-oss-20b"] and c.model == "openai/gpt-oss-20b"
+    from foodbot.concierge.llm import DEFAULT_MODELS
+
+    assert seen == ["llama-3.1-8b-instant", DEFAULT_MODELS[0]] and c.model == DEFAULT_MODELS[0]
     assert not c.breaker.is_open
 
 

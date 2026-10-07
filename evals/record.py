@@ -1,4 +1,4 @@
-"""Record live LLM replies for the golden set into evals/cassette.json (resumable; respects Groq's free-tier limits).
+"""Record live LLM replies for the golden set into the production model's cassette (evals/cassettes/) (resumable; respects Groq's free-tier limits).
 
     python -m evals.record
 

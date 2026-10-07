@@ -3,7 +3,7 @@
     python -m evals.run                 # rules, llm (replayed), cascade and full pipeline, plus grounding
     python -m evals.run --out evals/RESULTS.md
 
-LLM numbers come from recorded replies (evals/cassette.json), so a run is offline, free and deterministic.
+LLM numbers come from recorded replies (evals/cassettes/<production model>.json), so a run is offline, free and deterministic.
 Re-record with `python -m evals.record` after changing the prompt or schema.
 """
 from __future__ import annotations
@@ -17,6 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from evals.grounding import violations
+from foodbot import config
 from foodbot.concierge import planner
 from foodbot.concierge.intent import FoodRequest
 from foodbot.concierge.llm import Cassette, GroqClient
@@ -27,7 +28,7 @@ from foodbot.services import catalogue
 HERE = Path(__file__).resolve().parent
 GOLDEN = HERE / "golden.jsonl"            # dev set: used while building the rules
 HELDOUT = HERE / "heldout.jsonl"          # written afterwards and never tuned to
-CASSETTE = HERE / "cassette.json"
+CASSETTE = HERE / "cassettes" / (config.DEFAULT_GROQ_MODEL.replace("/", "_") + ".json")      # replies of the production model
 
 KORAMANGALA = (12.9352, 77.6245)
 WHITEFIELD = (12.9698, 77.7500)
@@ -133,7 +134,7 @@ def pct(a: int, b: int) -> str:
 def render(results: list[dict], ground: dict, golden: list[dict], title: str = "Concierge evaluation") -> str:
     out = [f"# {title}", "",
            f"{len(golden)} labelled requests (English, Kannada and Hinglish in Latin script, groups, allergies, vague and conversational phrasing). "
-           "A case passes only if **every** labelled field is right. LLM results are replayed from `evals/cassette.json`.", ""]
+           "A case passes only if **every** labelled field is right. LLM results are replayed from `evals/cassettes/` (the production model's recorded replies).", ""]
     out += ["| Mode | Cases passed | Pass rate |", "|---|---|---|"]
     for r in results:
         out.append(f"| {r['mode']} | {r['passed']}/{r['total']} | {pct(r['passed'], r['total'])} |")

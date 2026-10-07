@@ -4,9 +4,9 @@ Same prompt, same strict JSON schema, same cases. Replies are recorded once (`ev
 
 | Model | Held-out: LLM alone | Held-out: in the cascade | Red-team: model alone fails | Red-team: full pipeline fails | Tokens / call | Median latency |
 |---|---|---|---|---|---|---|
-| `openai/gpt-oss-20b` | 32/48 (67%) | 44/48 (92%) | 14/76 (18%) | 0/76 (0%) | n/a | n/a |
+| `openai/gpt-oss-20b` | 32/48 (67%) | 44/48 (92%) | 15/79 (19%) | 0/79 (0%) | 1128 (n=3) | 921 ms |
 | `openai/gpt-oss-120b` | 35/48 (73%) | 44/48 (92%) | 17/92 (18%) | 0/92 (0%) | 1139 (n=143) | 1077 ms |
-| `qwen/qwen3.8-27b` | 40/48 (83%) | 45/48 (94%) | 16/93 (17%) | 0/93 (0%) | 435 (n=144) | 500 ms |
+| `qwen/qwen3.8-27b` | 40/48 (83%) | 45/48 (94%) | 16/93 (17%) | 0/93 (0%) | 428 (n=260) | 485 ms |
 
 Each column counts only the messages that model has a recorded reply for; the denominators say how many.
 
