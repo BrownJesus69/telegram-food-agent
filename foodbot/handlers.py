@@ -9,7 +9,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from rapidfuzz import fuzz
 
-from foodbot import address_flow, config, db, fulfilment, metrics, orders, stats
+from foodbot import address_flow, billing, config, db, fulfilment, metrics, orders, stats
 from foodbot import keyboards as kb
 from foodbot.concierge import planner
 from foodbot.concierge.intent import FoodRequest
@@ -277,6 +277,9 @@ async def search_and_show(msg: Message, uid: int, req: FoodRequest, *, text: str
 
     LAST_SHOWN[uid] = [r.restaurant.id for r in recs]
     understood = f"🧠 {esc(req.describe())}{ai}" if req.has_target else f"🧠 It's {slot} time — popular right now"
+    usual = None if req.has_target else orders.usual_for_slot(uid)
+    if usual:                                           # "I'm hungry": offer the customer's own habit first
+        await msg.answer(usual_line(usual), reply_markup=kb.again(usual.order_id))
     await msg.answer(f"{delivery_header(addr)}\n{understood}{caution}\nTop {len(recs)} option(s):", reply_markup=kb.change_address("s"))
     for rec in recs:
         if len(rec.lines) == 1:
@@ -295,20 +298,37 @@ async def rerun_last_search(msg: Message, uid: int):
         await msg.answer(f"📍 Delivering to {address_flow.describe(db.get_active_address(uid))}\nWhat would you like to eat?")
 
 
-async def greet(msg: Message):
+def _pretty_slot(slot: str) -> str:
+    return {"latenight": "late-night"}.get(slot, slot)
+
+
+def usual_line(u: orders.Usual) -> str:
+    names = ", ".join(f"{k.qty} × {k.name}" if k.qty > 1 else k.name for k in u.plan.kept[:2])
+    more = f" +{len(u.plan.kept) - 2} more" if len(u.plan.kept) > 2 else ""
+    rest = catalogue.get_restaurant(u.plan.restaurant_id)
+    return f"🔁 Your usual {_pretty_slot(u.slot)}: {esc(names)}{more} from {esc(rest.name if rest else '')} (₹{u.plan.subtotal})"
+
+
+async def greet(msg: Message, uid: int):
     slot = catalogue.current_slot()
     labels = QUICK_PICKS[slot]
-    pretty = {"latenight": "late-night"}.get(slot, slot)
-    await msg.answer(f"👋 Hello! It's {pretty} time in Bengaluru. Fancy one of these, or tell me anything else?",
-                     reply_markup=kb.quick_picks(slot, labels))
+    usual = orders.usual_for_slot(uid)
+    text = f"👋 Hello! It's {_pretty_slot(slot)} time in Bengaluru. Fancy one of these, or tell me anything else?"
+    if usual:
+        text += "\n" + usual_line(usual)
+    await msg.answer(text, reply_markup=kb.quick_picks(slot, labels, usual.order_id if usual else None,
+                                                        f"🔁 Your usual {_pretty_slot(slot)}"))
 
 
 async def process_text(m: Message, uid: int, text: str):
     """Everything after the per-user state checks: understand the message and act on it."""
+    if _REORDER.match(_norm(text)):                      # rules only: never sent to the LLM
+        await show_reorder(m, uid)
+        return
     req = await understand(text)
 
     if req.intent == "greeting":
-        await greet(m)
+        await greet(m, uid)
         return
     if req.intent == "cart":
         await send_cart(m, uid)
@@ -385,7 +405,7 @@ async def cb_rate(cb: CallbackQuery):
         await cb.answer(str(e), show_alert=True)
         return
     await cb.answer("Thanks!")
-    await safe_edit(cb.message, f"Thanks for rating order #{oid}: {'⭐' * int(stars)}")
+    await safe_edit(cb.message, f"Thanks for rating order #{oid}: {'⭐' * int(stars)}", kb.again(int(oid)))
     await fulfilment.notify_admins(cb.bot, f"⭐ Order #{oid} was rated {stars}/5 by the customer.")
     await fulfilment.refresh_admin_cards(cb.bot, int(oid))
 
@@ -479,6 +499,48 @@ async def cb_plan(cb: CallbackQuery):
 @router.callback_query(F.data == "noop")
 async def cb_noop(cb: CallbackQuery):
     await cb.answer()
+
+
+_REORDER = re.compile(
+    r"^(?:please )?(?:"
+    r"re-?order|re order|order (?:it |that |this |the same |same )?again|order again please"
+    r"|(?:repeat|redo) (?:my |the )?(?:last|previous) order|repeat (?:it|that)"
+    r"|same as (?:last time|before|usual)|same again|(?:the |my )?usual"
+    r"|(?:order|get me|i want|i'll have|i will have) (?:the |my )?(?:usual|same as last time|same as before)"
+    r")$"
+)
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"\s+", " ", (text or "").strip().lower().replace("’", "'")).strip(" .!?")
+
+
+def _digits(part: str, max_len: int = 12) -> int | None:
+    """Strict non-negative integer: ASCII digits only (str.isdecimal() also accepts other scripts' digits)."""
+    return int(part) if part.isascii() and part.isdigit() and len(part) <= max_len else None
+
+
+def _parse_again(data: str) -> int | None:
+    """`again:<order_id>` -> order id, or None when the callback was not produced by our keyboards."""
+    parts = data.split(":")
+    if len(parts) != 2:
+        return None
+    oid = _digits(parts[1])
+    return oid if oid else None
+
+
+def _parse_split(data: str) -> tuple[int, int | None] | None:
+    """`split:<order_id>` (ask) or `split:<order_id>:<n>` (answer, n in the offered 2-8) -> (order_id, n | None), else None."""
+    parts = data.split(":")
+    if len(parts) not in (2, 3):
+        return None
+    oid = _digits(parts[1])
+    if not oid:
+        return None
+    if len(parts) == 2:
+        return oid, None
+    n = _digits(parts[2], 2)
+    return (oid, n) if n in billing.BUTTON_PEOPLE else None
 
 
 def _parse_pick(data: str) -> tuple[str, int] | None:
@@ -619,12 +681,15 @@ async def cb_confirm(cb: CallbackQuery):
             sent += 1
         except Exception as e:
             log.warning("admin notify failed for %s: %s", admin_id, type(e).__name__)
+    group = sum(i["quantity"] for i in items) >= 2
     text = f"✅ Order #{oid} placed and sent to the restaurant. Waiting for acceptance."
     if not sent:
         text += "\n⚠️ Could not reach the restaurant admin yet; your order is saved."
     if config.SIMULATE_DELIVERY:
         text += "\n<i>The kitchen and rider here are simulated; /track shows live progress.</i>"
     await cb.message.answer(text, reply_markup=kb.track(oid, can_cancel=True))
+    if group:                                            # more than one portion: probably more than one person
+        await cb.message.answer("👥 Looks like a group order. Split the bill between how many people?", reply_markup=kb.split_choice(oid))
 
 
 @router.callback_query(F.data.startswith("ucancel:"))
@@ -680,3 +745,89 @@ async def cb_reject_reason(cb: CallbackQuery):
         await cb.answer(str(e), show_alert=True)
         return
     await cb.answer("Rejected")
+
+
+# ------------------------------------------------------------------ order again / "the usual"
+def _order_summary(order, items) -> str:
+    rest = get_restaurant(order["restaurant_id"])
+    names = ", ".join(f"{i['quantity']} × {i['item_name']}" for i in items[:3])
+    more = f" +{len(items) - 3} more" if len(items) > 3 else ""
+    return f"#{order['id']} · {esc(rest.name if rest else order['restaurant_id'])} · {esc(names)}{more} · ₹{order['total']}"
+
+
+async def show_reorder(msg: Message, uid: int):
+    rows = orders.recent_delivered(uid, 3)
+    if not rows:
+        await msg.answer("You don't have a delivered order to repeat yet. Tell me what you'd like to eat!")
+        return
+    lines, buttons = [], []
+    for o in rows:
+        _, items = orders.get_order(o["id"])
+        lines.append(_order_summary(o, items))
+        rest = get_restaurant(o["restaurant_id"])
+        buttons.append((o["id"], f"🔁 #{o['id']} · {(rest.name if rest else '')[:24]} · ₹{o['total']}"))
+    text = "🔁 <b>Order again</b> — your last delivered orders:\n\n" + "\n".join(lines)
+    text += "\n\n<i>Prices, availability and opening hours are checked again now.</i>"
+    usual = orders.usual_for_slot(uid)
+    if usual:
+        text = usual_line(usual) + "\n\n" + text
+    await msg.answer(text, reply_markup=kb.reorder_choices(buttons))
+
+
+@router.message(Command("reorder"))
+async def cmd_reorder(m: Message):
+    db.upsert_user(m.from_user.id, m.from_user.full_name)
+    await show_reorder(m, m.from_user.id)
+
+
+@router.callback_query(F.data.startswith("again:"))
+async def cb_again(cb: CallbackQuery):
+    oid = _parse_again(cb.data)
+    if oid is None:
+        await cb.answer("That button is no longer valid.", show_alert=True)
+        return
+    try:
+        plan, replaced = orders.reorder(cb.from_user.id, oid)      # refuses another customer's order
+    except orders.OrderError as e:
+        await cb.answer(str(e), show_alert=True)
+        return
+    await cb.answer()
+    db.log_event("reorder", cb.from_user.id, order_id=oid, kept=len(plan.kept), dropped=len(plan.dropped))
+    if plan.blocked:
+        await cb.message.answer(f"⚠️ Can't repeat order #{oid}: {esc(plan.blocked)}")
+        return
+    if not plan.kept:
+        await cb.message.answer(f"⚠️ None of the items from order #{oid} are available right now.")
+        return
+    note = f"🔁 Added the items from order #{oid} at today's prices."
+    if plan.dropped:
+        note += "\nNot added: " + "; ".join(f"{esc(d.name)} ({esc(d.reason)})" for d in plan.dropped)
+    if replaced:
+        note += "\nThis replaced your previous cart."
+    await cb.message.answer(note)
+    await send_cart(cb.message, cb.from_user.id)
+
+
+# ------------------------------------------------------------------ split the bill
+@router.callback_query(F.data.startswith("split:"))
+async def cb_split(cb: CallbackQuery):
+    parsed = _parse_split(cb.data)
+    if not parsed:
+        await cb.answer("That button is no longer valid.", show_alert=True)
+        return
+    oid, people = parsed
+    order, _ = orders.get_order(oid)
+    if not order or order["customer_id"] != cb.from_user.id:
+        await cb.answer("Not your order.", show_alert=True)
+        return
+    if order["status"] in ("CANCELLED", "REJECTED"):
+        await cb.answer("That order wasn't placed, so there's nothing to split.", show_alert=True)
+        return
+    await cb.answer()
+    if people is None:
+        await cb.message.answer("🧾 Split between how many people?", reply_markup=kb.split_choice(oid))
+        return
+    rest = get_restaurant(order["restaurant_id"])
+    db.log_event("split_bill", cb.from_user.id, order_id=oid, people=people)
+    await cb.message.answer(billing.format_split(oid, rest.name if rest else order["restaurant_id"],
+                                                 order["total"], people, order["delivery_fee"]))

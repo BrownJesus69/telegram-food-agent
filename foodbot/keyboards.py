@@ -1,6 +1,8 @@
 from aiogram.types import InlineKeyboardButton as B
 from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
+from foodbot.billing import BUTTON_PEOPLE
+
 
 def location_request():
     return ReplyKeyboardMarkup(
@@ -137,19 +139,39 @@ def plan_add(token, total):
     return InlineKeyboardMarkup(inline_keyboard=[[B(text=f"🛒 Add all to cart · ₹{total}", callback_data=f"plan:{token}")]])
 
 
-def quick_picks(slot, labels):
-    rows = [[B(text=lab, callback_data=f"ask:{slot}:{i}") for i, lab in enumerate(labels)]]
+def quick_picks(slot, labels, usual_order_id=None, usual_label="🔁 Your usual"):
+    rows = []
+    if usual_order_id:
+        rows.append([B(text=usual_label, callback_data=f"again:{usual_order_id}")])
+    rows.append([B(text=lab, callback_data=f"ask:{slot}:{i}") for i, lab in enumerate(labels)])
     rows.append([B(text="📍 Change address", callback_data="addr:book:s")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 # --------------------------------------------------------------------- tracking and feedback
+def again(order_id):
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text="🔁 Order again", callback_data=f"again:{order_id}")]])
+
+
 def rating(order_id):
-    return InlineKeyboardMarkup(inline_keyboard=[[B(text=f"{n}⭐", callback_data=f"rate:{order_id}:{n}") for n in range(1, 6)]])
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [B(text=f"{n}⭐", callback_data=f"rate:{order_id}:{n}") for n in range(1, 6)],
+        [B(text="🔁 Order again", callback_data=f"again:{order_id}"), B(text="🧾 Split bill", callback_data=f"split:{order_id}")],
+    ])
 
 
 def track(order_id, can_cancel=False):
     row = [B(text="🔄 Refresh", callback_data=f"track:{order_id}")]
     if can_cancel:
         row.append(B(text="Cancel order", callback_data=f"ucancel:{order_id}"))
-    return InlineKeyboardMarkup(inline_keyboard=[row])
+    return InlineKeyboardMarkup(inline_keyboard=[row, [B(text="🧾 Split bill", callback_data=f"split:{order_id}")]])
+
+
+def reorder_choices(rows):
+    """rows: [(order_id, label)] -> one 'again:<id>' button per past order."""
+    return InlineKeyboardMarkup(inline_keyboard=[[B(text=label, callback_data=f"again:{oid}")] for oid, label in rows])
+
+
+def split_choice(order_id):
+    nums = [B(text=str(n), callback_data=f"split:{order_id}:{n}") for n in BUTTON_PEOPLE]
+    return InlineKeyboardMarkup(inline_keyboard=[nums[:4], nums[4:]])
