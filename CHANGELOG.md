@@ -2,16 +2,13 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com), versions follow the roadmap in [PLAN.md](PLAN.md).
 
-## [Unreleased]
-### Added
-- Reorder ("the usual", `/reorder`), split-the-bill, Telegram Mini App map picker and photo-of-food ordering (see the feature docs in `docs/`).
-- Supply chain and quality gates in CI: CodeQL, Dependabot, Trivy image scan, GHCR publish on `main`, mypy, coverage gate (85%).
-- `tools/loadtest.py` and [docs/LOADTEST.md](docs/LOADTEST.md): 50 simultaneous customers through the real dispatcher.
-
 ## [0.5.0] - 2026-10-07
 ### Changed
 - **Production LLM is now `qwen/qwen3.8-27b`**, chosen by a measured bake-off (`evals/BAKEOFF.md`): 83% vs 67% held-out accuracy alone at about 40% of the tokens. Full-pipeline held-out accuracy 91.7% -> 93.8%.
 ### Added
+- Reorder ("the usual", `/reorder`), split-the-bill, Telegram Mini App map picker and photo-of-food ordering (see the feature docs in `docs/`).
+- Supply chain and quality gates in CI: CodeQL, Dependabot, Trivy image scan, GHCR publish on `main`, mypy, coverage gate (85%).
+- `tools/loadtest.py` and [docs/LOADTEST.md](docs/LOADTEST.md): 50 simultaneous customers through the real dispatcher.
 - Red-team suite (96 hostile or awkward messages, four readers incl. a fully compromised model), property-based tests (Hypothesis), forged-callback tests, threat model.
 - Honest warnings when a stated need cannot be enforced (halal, diabetic, an unmodelled allergen).
 ### Fixed

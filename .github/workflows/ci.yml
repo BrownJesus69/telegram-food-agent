@@ -32,7 +32,9 @@ jobs:
       - name: Catalogue is valid and reproducible
         run: python -m tools.catalogue_gen.validate
       - name: Tests with coverage (no network, no secrets)
-        run: python -m pytest --cov --cov-report=term --cov-report=xml --cov-fail-under=85
+        run: python -m pytest -m "not slow" --cov --cov-report=term --cov-report=xml --cov-fail-under=85
+      - name: Evaluation gates (whole eval sets replayed; slow under coverage, so run without it)
+        run: python -m pytest -m slow
       - name: Concierge evaluation and guardrail (replays recorded LLM replies)
         run: python -m evals.run --out /tmp/results.md
       - name: Red-team evaluation (hostile messages; fails if a stated constraint is ever dropped)

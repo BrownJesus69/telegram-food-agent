@@ -52,6 +52,7 @@ def test_rules_quality_gate(sets):
     assert held["passed"] / held["total"] >= 0.80, [k for k, c in held["cases"].items() if not c["ok"]]
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("which", ["dev", "heldout"])
 def test_guardrail_has_zero_violations(sets, which):
     catalogue.load()
@@ -73,6 +74,7 @@ def test_grounding_checker_detects_real_violations():
     assert any("closed" in b for b in violations(interpret_rules("x"), good, datetime(2026, 10, 7, 4, 0, tzinfo=catalogue.IST)))
 
 
+@pytest.mark.slow
 def test_pipeline_quality_gate_with_recorded_llm(sets):
     """Replays the recorded Groq replies. Fails if a change makes the cascade worse than rules alone on unseen requests."""
     cassette = Cassette(ev.CASSETTE)

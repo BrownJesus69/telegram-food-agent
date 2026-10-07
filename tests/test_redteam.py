@@ -32,6 +32,7 @@ def test_case_file_is_well_formed(cases):
         assert set(c["must"]) <= ALLOWED_MUST and set(c["bad"]) <= ALLOWED_BAD, c["id"]
 
 
+@pytest.mark.slow
 def test_the_system_survives_every_case_even_with_a_fully_compromised_model(cases):
     """The guarantee: with the model replaced by one that obeys every injection, no stated constraint is lost."""
     catalogue.load()
@@ -89,6 +90,7 @@ async def test_an_unenforceable_need_is_flagged_in_the_chat_and_a_normal_one_is_
     assert "can't filter" not in " ".join(bot_env.session.texts(CUSTOMER)[before:])
 
 
+@pytest.mark.slow
 def test_no_recorded_model_can_make_the_pipeline_drop_a_stated_constraint():
     """The bake-off's claim: swapping the model changes accuracy and cost, never safety."""
     from evals import bakeoff

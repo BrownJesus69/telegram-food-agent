@@ -132,6 +132,18 @@ def outcome(case: dict, req: FoodRequest | None, *, plan: bool = True) -> list[s
     return out
 
 
+_RECS: dict[tuple, list] = {}
+
+
+def _recommend_cached(key: str, req: FoodRequest, point: tuple[float, float], label: str) -> list:
+    """The same request recurs across cases, pipelines and models; the planner is deterministic, so remember its answers."""
+    k = (key, point, label, id(next(iter(catalogue.RESTAURANTS.values()), None)))      # a reloaded catalogue has new objects: do not reuse
+    if k not in _RECS:
+        now = TIMES[label]
+        _RECS[k] = planner.recommend(req, *point, now=now, limit=6, current_slot=catalogue.current_slot(now))
+    return _RECS[k]
+
+
 def planner_problems(case: dict, req: FoodRequest) -> list[str]:
     """Run the planner for the request at two places and three times of day; check the *customer's* constraints, not the request's."""
     oracle = copy.deepcopy(req)
@@ -144,7 +156,7 @@ def planner_problems(case: dict, req: FoodRequest) -> list[str]:
     found: list[str] = []
     for point in (KORAMANGALA, WHITEFIELD):
         for label, now in TIMES.items():
-            recs = planner.recommend(req, *point, now=now, limit=6, current_slot=catalogue.current_slot(now))
+            recs = _recommend_cached(json.dumps(req.to_dict(), sort_keys=True), req, point, label)
             found += [f"planner@{label}: {v}" for v in violations(oracle, recs, now)[:2]]
     return found[:4]
 

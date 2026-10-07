@@ -1,6 +1,6 @@
 [project]
 name = "foodbot"
-version = "0.2.0"
+version = "0.5.0"
 description = "Telegram food-ordering agent for Bengaluru (synthetic catalogue)"
 requires-python = ">=3.11"
 
@@ -9,6 +9,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
 asyncio_mode = "auto"
+markers = ["slow: replays whole evaluation sets (minutes under coverage); CI runs them in a separate step without coverage tracing"]
 
 [tool.ruff]
 line-length = 120

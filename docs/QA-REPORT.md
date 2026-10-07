@@ -62,3 +62,19 @@ Same method as above (production container, real Telegram Web, Claude in Chrome)
 - **Rate limiting.** The tester's account is the admin, and admins are deliberately exempt from the limiter, so it cannot be triggered from this account. Covered by `tests/test_ops.py`.
 - **GPS pin and voice notes.** Telegram Web has no location picker, and there is no microphone. Covered by `tests/test_addresses.py` and the voice tests.
 - **The LLM paths.** The free daily token allowance of the production model was used up by the red-team recording, so the bot answered from the rules only (the designed degradation). Not a defect; noted so nobody reads these results as LLM coverage.
+
+---
+
+# Round 3: new features, live on Telegram Web (2026-10-07, ~08:30 IST, production model qwen3.8-27b)
+| Flow | Result |
+|---|---|
+| `order again` | Lists the last three delivered orders as buttons, with the note that prices, availability and hours are re-checked |
+| Reorder of orders from two late-night kitchens at 08:32 | Refused with the reason: *"Moonlight Kitchen is closed right now (open 9:00 pm - 4:00 am)"*; the cart was left alone |
+| `idli vada for 3 under 400` → select → checkout → confirm to the friend's address | Order #5 placed; the bot immediately offered *"Looks like a group order. Split the bill between how many people?"*; tapping 3 gave *"total ₹225 / 3 → ₹75 each (includes ₹15 delivery, split equally)"* |
+| Address prompt after enabling `MINIAPP_URL` | The reply keyboard shows **🗺 Pick on map** next to *Share location*; tapping it makes Telegram Web ask permission to open the web app, then creates the web-app panel |
+| A photo (synthetic image of a dosa with the words "MASALA DOSA" drawn on it) | *"📸 Looks like: masala dosa (AI-assisted guess). Not right? Just type what you'd like..."* followed by three real dosa options for the friend's address |
+
+## Not verified
+- **The Mini App inside Telegram.** The web-app panel stayed on Telegram's loading placeholder for about 15 seconds. The same page, opened directly at its GitHub Pages address, renders the map, pin and button correctly, its Leaflet integrity hashes match the CDN files, and the bot side (payload validation, label step) is covered by 79 tests. I could not tell whether the blank panel is the Telegram Web client or something in the page, so treat the in-Telegram round trip as **unproven**; check it on a phone.
+- **Recognition quality of the photo feature.** The test image had the dish name written on it, so this shows the plumbing (download, vision call, grounding, search), not that the model recognises real food photos. A photo costs about 2,000 tokens, five times a text message.
+- **A successful reorder.** Both late-night kitchens were closed at the time, so only the refusal path was exercised live; the success path is covered by `tests/test_reorder.py`.
