@@ -1,10 +1,19 @@
 from aiogram.types import InlineKeyboardButton as B
-from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
+
+from foodbot import config
 
 
 def location_request():
+    """Share-my-location button, plus "Pick on map" (a Mini App) when MINIAPP_URL is configured.
+
+    Telegram only allows web_app buttons on https URLs and only delivers sendData() from reply-keyboard Mini Apps.
+    """
+    row = [KeyboardButton(text="📍 Share location", request_location=True)]
+    if config.MINIAPP_URL.startswith("https://"):
+        row.append(KeyboardButton(text="🗺 Pick on map", web_app=WebAppInfo(url=config.MINIAPP_URL)))
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📍 Share location", request_location=True)]],
+        keyboard=[row],
         resize_keyboard=True, one_time_keyboard=True,
     )
 
