@@ -93,7 +93,7 @@ class UpdateMiddleware(BaseMiddleware):
         self.bucket = bucket or TokenBucket(config.THROTTLE_BURST, config.THROTTLE_PER_SECOND)
         self.warned: dict[int, float] = {}
 
-    async def __call__(self, handler: Callable[[Update, dict], Awaitable[Any]], event: Update, data: dict) -> Any:
+    async def __call__(self, handler: Callable[[Update, dict], Awaitable[Any]], event: Update, data: dict) -> Any:  # type: ignore[override]  # we only ever sit on dp.update
         kind, user_id, chat_id = _who(event)
         token = update_ctx.set({"update_id": event.update_id, "user_id": user_id})
         started = time.perf_counter()

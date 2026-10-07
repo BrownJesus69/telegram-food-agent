@@ -18,3 +18,24 @@ extend-exclude = ["tools/archive", ".venv"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B"]
 ignore = ["E501", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+files = ["foodbot"]
+
+# aiogram types `CallbackQuery.message` and `Message.text` as Optional although the filters on these handlers guarantee they are set;
+# narrowing every use would add noise, not safety. Everything else is checked.
+[[tool.mypy.overrides]]
+module = ["foodbot.handlers", "foodbot.address_flow", "foodbot.fulfilment"]
+disable_error_code = ["union-attr", "arg-type", "index", "attr-defined"]
+
+[tool.coverage.run]
+source = ["foodbot"]
+branch = false
+
+[tool.coverage.report]
+fail_under = 85
+skip_empty = true
+show_missing = false

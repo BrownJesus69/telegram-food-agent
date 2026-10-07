@@ -76,7 +76,7 @@ def _utc(now: datetime | None) -> datetime:
     return (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
 
 
-def _restaurant_point(order):
+def _restaurant_point(order) -> tuple[float, float]:
     rest = catalogue.get_restaurant(order["restaurant_id"])
     return (rest.lat, rest.lon) if rest else (order["latitude"], order["longitude"])
 

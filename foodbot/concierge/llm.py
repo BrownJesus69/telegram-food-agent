@@ -13,6 +13,7 @@ import json
 import logging
 import time
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -133,7 +134,7 @@ class GroqClient:
         self.breaker = CircuitBreaker()
         self.cassette, self.replay_only, self.record = cassette, replay_only, record
         self.cache: dict[str, FoodRequest] = {}
-        self.stats = {"calls": 0, "ok": 0, "failed": 0, "cache_hits": 0, "replayed": 0, "tokens": 0, "latency_ms": []}
+        self.stats: dict[str, Any] = {"calls": 0, "ok": 0, "failed": 0, "cache_hits": 0, "replayed": 0, "tokens": 0, "latency_ms": []}
 
     @property
     def model(self) -> str:

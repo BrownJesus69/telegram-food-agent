@@ -16,7 +16,7 @@ backups
 tests
 tools
 evals/*.jsonl
-evals/cassette.json
+evals/cassettes
 evals/history
 docs
 Data

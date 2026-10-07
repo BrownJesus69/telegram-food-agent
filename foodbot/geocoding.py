@@ -51,7 +51,7 @@ def area_matches(text: str, limit: int = 3) -> list[Place]:
     for name, (lat, lon, _) in catalogue.localities().items():
         n = _norm(name)
         if re.search(rf"\b{re.escape(n)}\b", q):
-            score = 100
+            score = 100.0
         else:
             score = fuzz.WRatio(q, n) if len(q) >= 4 else 0
         if score >= 88:

@@ -2,6 +2,9 @@
 
 [![CI](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml)
 
+[![CodeQL](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/codeql.yml/badge.svg)](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/codeql.yml)
+![tests](https://img.shields.io/badge/tests-253-brightgreen) ![coverage](https://img.shields.io/badge/coverage-90%25-brightgreen) ![types](https://img.shields.io/badge/mypy-clean-blue)
+
 A Telegram bot where a customer says what they want in plain words (English, Hinglish or Kannada, typed or as a voice
 note), picks a delivery address (home, office, a friend's place), builds a cart, places a cash-on-delivery order, and a
 restaurant operator accepts / prepares / dispatches it from the same chat.
@@ -22,7 +25,7 @@ Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [do
 4. **The product:** order for yourself or a friend across Bengaluru; a simulated kitchen and rider run the order with a live-location map
    ([live QA, twice](docs/QA-REPORT.md)).
 5. **The operations:** Docker (non-root, read-only, healthcheck, restart policy), CI that runs 253 tests plus the evals, a `/metrics` endpoint
-   and a dashboard. The live bot is [@AdityaTFood_bot](https://t.me/AdityaTFood_bot); it runs on the author's machine, so it is up only while that machine is.
+   and a dashboard; [load-tested](docs/LOADTEST.md) with 50 customers at once (p50 378 ms, p95 1351 ms per update, one process). The live bot is [@AdityaTFood_bot](https://t.me/AdityaTFood_bot); it runs on the author's machine, so it is up only while that machine is.
 
 ## What a customer can say
 | Message | What happens |
@@ -39,6 +42,23 @@ Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [do
 
 Every answer begins with **"I understood: …"** (marked *AI-assisted* when the LLM was involved) and each suggestion
 lists its reasons (bestseller · 4.5★ kitchen · very close · Jain-friendly …), so a misreading is corrected in one message.
+
+## Architecture
+```mermaid
+flowchart LR
+    C([Customer on Telegram]) -->|text · voice · pin| D[aiogram dispatcher<br/>rate limit · error net · metrics]
+    D --> R[Rules reader<br/>EN · Hinglish · Kannada<br/>authoritative for what was stated]
+    R -->|nothing to search for,<br/>or no result| M[(LLM: qwen3.8-27b<br/>strict JSON schema<br/>circuit breaker)]
+    M -->|FoodRequest, grounded<br/>to catalogue words| G{merge:<br/>stated beats inferred}
+    R --> G
+    G --> P[Planner<br/>open now · stock · radius<br/>diet · allergens · budget]
+    CAT[(Synthetic catalogue<br/>522 kitchens · 12k items)] --> P
+    P --> K[Cart → confirm tap → order]
+    K --> DB[(SQLite WAL<br/>backups)]
+    K --> S[Delivery simulator<br/>kitchen · rider · live location]
+    S --> C
+    D -. /metrics /healthz /dashboard .-> O[Ops server]
+```
 
 ## How the AI is used — and kept honest
 The LLM **proposes**, deterministic code **disposes** ([ADR 0002](docs/adr/0002-llm-boundary.md)).

@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    name: lint + tests + evals
+    name: lint + types + tests + evals
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -27,25 +27,31 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Lint
         run: ruff check .
+      - name: Types
+        run: mypy
       - name: Catalogue is valid and reproducible
         run: python -m tools.catalogue_gen.validate
-      - name: Tests (no network, no secrets)
-        run: python -m pytest
+      - name: Tests with coverage (no network, no secrets)
+        run: python -m pytest --cov --cov-report=term --cov-report=xml --cov-fail-under=85
       - name: Concierge evaluation and guardrail (replays recorded LLM replies)
         run: python -m evals.run --out /tmp/results.md
       - name: Red-team evaluation (hostile messages; fails if a stated constraint is ever dropped)
         run: python -m evals.redteam --out /tmp/redteam.md
-      - name: Keep the eval reports
+      - name: Model bake-off report (replay)
+        run: python -m evals.bakeoff --out /tmp/bakeoff.md
+      - name: Keep the reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: eval-results
+          name: eval-and-coverage-reports
           path: |
             /tmp/results.md
             /tmp/redteam.md
+            /tmp/bakeoff.md
+            coverage.xml
 
   docker:
-    name: docker image builds and passes its health check
+    name: docker image builds, is scanned and passes its health check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: test
@@ -67,3 +73,26 @@ jobs:
           out=$(docker run --rm foodbot:ci 2>&1); code=$?
           echo "$out" | tail -5
           test $code -ne 0 && echo "$out" | grep -q "TELEGRAM_BOT_TOKEN"
+      - name: Vulnerability scan (Trivy; fails on fixable HIGH or CRITICAL findings)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image \
+            --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress foodbot:ci
+
+  publish:
+    name: publish the image to GHCR (main only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and push
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -t "$image:${{ github.sha }}" -t "$image:latest" --build-arg GIT_SHA=${{ github.sha }} .
+          docker push "$image:${{ github.sha }}"
+          docker push "$image:latest"

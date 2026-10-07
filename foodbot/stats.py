@@ -8,6 +8,7 @@ import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 import foodbot
 from foodbot import config, db, state
@@ -24,7 +25,8 @@ def _eval_summary() -> dict:
         text = RESULTS.read_text(encoding="utf-8")
     except OSError:
         return {}
-    out, section = {}, None
+    out: dict[str, Any] = {}
+    section = None
     for line in text.splitlines():
         if line.startswith("# "):
             section = "heldout" if "held-out" in line else "dev" if "dev" in line else None
@@ -57,7 +59,7 @@ def collect(now: datetime | None = None) -> dict:
 
         ev_all = {r["kind"]: r["n"] for r in conn.execute("SELECT kind, COUNT(*) n FROM events GROUP BY kind")}
         ev_24 = {r["kind"]: r["n"] for r in conn.execute("SELECT kind, COUNT(*) n FROM events WHERE ts >= ? GROUP BY kind", (since,))}
-        sources = Counter()
+        sources: Counter[str] = Counter()
         for r in conn.execute("SELECT data FROM events WHERE kind='search' ORDER BY id DESC LIMIT 500"):
             try:
                 sources[json.loads(r["data"] or "{}").get("source", "rules")] += 1
