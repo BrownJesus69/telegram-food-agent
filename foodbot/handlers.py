@@ -11,11 +11,13 @@ from rapidfuzz import fuzz
 
 from foodbot import address_flow, config, db, fulfilment, metrics, orders, stats
 from foodbot import keyboards as kb
-from foodbot.concierge import planner
+from foodbot.concierge import planner, vision
 from foodbot.concierge.intent import FoodRequest
 from foodbot.concierge.llm import default_client
+from foodbot.concierge.rules import interpret_rules
 from foodbot.concierge.understand import second_opinion, understand
 from foodbot.fulfilment import admin_card, progress_bar
+from foodbot.observability import TokenBucket
 from foodbot.services import catalogue
 from foodbot.services.catalogue import RESTAURANTS, get_item, get_items_for_restaurant, get_restaurant
 from foodbot.services.distance import haversine_km
@@ -38,6 +40,11 @@ QUICK_PICKS = {
     "dinner": ["biryani", "kothu parotta", "butter chicken"],
     "latenight": ["chicken roll", "biryani", "masala maggi"],
 }
+
+# A photo read costs ~2,000 tokens against Groq's free 8,000/minute: each customer gets a small burst then one every 20 s,
+# and the bot as a whole is held to about 3 a minute so that text messages keep their share of the quota.
+PHOTO_LIMIT = TokenBucket(config.PHOTO_BURST, config.PHOTO_PER_SECOND)
+PHOTO_GLOBAL = TokenBucket(config.PHOTO_GLOBAL_BURST, config.PHOTO_GLOBAL_PER_SECOND)
 
 DIET_ICON = {"veg": "🟢", "egg": "🟡", "nonveg": "🔴"}
 
@@ -446,6 +453,68 @@ async def on_voice(m: Message):
         return
     await m.answer(f"🎙 I heard: <i>“{esc(text[:300])}”</i>")
     await process_text(m, uid, text)
+
+
+async def download_photo(bot, size) -> bytes:
+    """Download one Telegram PhotoSize (a JPEG) into memory. Nothing is written to disk."""
+    buf = await bot.download(size.file_id)
+    return buf.read() if buf else b""
+
+
+@router.message(F.photo)
+async def on_photo(m: Message):
+    """Photo of the food the customer wants: a vision model proposes dishes, the usual boundary disposes (docs/FEATURES-PHOTO.md)."""
+    uid = m.from_user.id
+    db.upsert_user(uid, m.from_user.full_name)
+    caption = (m.caption or "").strip()[:300]
+    if caption:                                   # words next to a photo are read by the deterministic rules first
+        said = interpret_rules(caption)
+        if said.dishes or said.intent in {"cart", "address", "menu"}:
+            await process_text(m, uid, caption)   # they already said what they want: no vision call needed
+            return
+    if not PHOTO_LIMIT.allow(uid):
+        await m.answer("📸 One photo at a time, please: give me a few seconds, or just type what you'd like.")
+        return
+    if not PHOTO_GLOBAL.allow(0):
+        await m.answer("📸 I'm reading a lot of photos right now. Try again in a moment, or just type what you'd like.")
+        return
+    if not db.get_active_address(uid):
+        await m.answer("Where should I deliver? Share a pin, type an address, or pick an area, then send the photo again.",
+                       reply_markup=kb.location_request())
+        await address_flow.begin_add(m, uid, "s")
+        return
+    client = default_client()
+    if not vision.available(client):
+        await m.answer("📸 Photo search is unavailable right now. Tell me what you'd like in words and I'll search for that.")
+        return
+
+    size = vision.pick_photo_size(m.photo)
+    try:
+        data = await download_photo(m.bot, size)
+        info = vision.inspect_image(data)
+    except vision.PhotoError as e:
+        await m.answer(f"📸 {esc(str(e))} Please send a different photo, or type what you'd like.")
+        return
+    except Exception as e:                        # Telegram hiccup while fetching the file
+        log.warning("photo download failed: %s", type(e).__name__)
+        await m.answer("📸 I couldn't fetch that photo. Please try again, or type what you'd like.")
+        return
+
+    req = await vision.describe_photo(data, info.mime, client=client)
+    del data                                      # the image is never kept
+    if req is None:
+        db.log_event("photo", uid, outcome="unavailable")
+        await m.answer("📸 I couldn't read that photo right now. Tell me what you'd like in words and I'll search for that.")
+        return
+    if not req.has_target:
+        db.log_event("photo", uid, outcome="unsure")
+        await m.answer("📸 I can't tell what food that is, and I'd rather not guess. Tell me in words, e.g. <i>masala dosa under 150</i>.")
+        return
+    db.log_event("photo", uid, outcome="read", dishes=len(req.dishes))
+    seen = req.describe()
+    req = vision.with_caption(req, caption)
+    await m.answer(f"📸 Looks like: <b>{esc(seen)}</b> <i>(AI-assisted guess)</i>\nNot right? Just type what you'd like and I'll search for that instead.")
+    await search_and_show(m, uid, req)
 
 
 @router.callback_query(F.data.startswith("ask:"))

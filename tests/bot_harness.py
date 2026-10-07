@@ -6,8 +6,15 @@ from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ParseMode
-from aiogram.methods import EditMessageLiveLocation, EditMessageText, SendLocation, SendMessage, StopMessageLiveLocation
-from aiogram.types import CallbackQuery, Chat, Location, Message, MessageEntity, Update, User
+from aiogram.methods import (
+    EditMessageLiveLocation,
+    EditMessageText,
+    GetFile,
+    SendLocation,
+    SendMessage,
+    StopMessageLiveLocation,
+)
+from aiogram.types import CallbackQuery, Chat, File, Location, Message, MessageEntity, PhotoSize, Update, User
 
 from foodbot import address_flow
 from foodbot.app import build_dispatcher
@@ -49,16 +56,20 @@ class RecordingSession(BaseSession):
     def __init__(self):
         super().__init__()
         self.sent: list = []
+        self.files: dict[str, bytes] = {}          # file_id -> bytes Telegram would serve (feed `bot.download`)
         self._mid = 100
 
     async def close(self):
         pass
 
-    async def stream_content(self, *a, **kw):
-        yield b""
+    async def stream_content(self, url="", *a, **kw):
+        yield self.files.get(url.rsplit("/", 1)[-1], b"")
 
     async def make_request(self, bot, method, timeout=None):
         self.sent.append(method)
+        if isinstance(method, GetFile):
+            return File(file_id=method.file_id, file_unique_id="u" + method.file_id, file_path=method.file_id,
+                        file_size=len(self.files.get(method.file_id, b"")))
         if isinstance(method, (SendMessage, EditMessageText)):
             assert_valid_telegram_html(method.text or "")
             assert_valid_markup(getattr(method, "reply_markup", None))
@@ -126,6 +137,17 @@ class BotEnv:
 
     async def say(self, uid, text):
         await self.dp.feed_update(self.bot, Update(update_id=self._next(), message=self._msg(uid, text)))
+
+    async def send_photo(self, uid, data: bytes, caption=None, sizes=((320, 240), (800, 600))):
+        """The customer sends a photo: Telegram offers several sizes, each downloadable by its file_id."""
+        photos = []
+        for i, (w, h) in enumerate(sizes):
+            file_id = f"photo{self._next()}_{i}"
+            self.session.files[file_id] = data
+            photos.append(PhotoSize(file_id=file_id, file_unique_id=f"u{file_id}", width=w, height=h, file_size=len(data)))
+        msg = Message(message_id=self._next(), date=datetime.now(), chat=Chat(id=uid, type="private"), from_user=self.user(uid),
+                      photo=photos, caption=caption)
+        await self.dp.feed_update(self.bot, Update(update_id=self._next(), message=msg))
 
     async def send_location(self, uid, lat, lon):
         await self.dp.feed_update(self.bot, Update(update_id=self._next(),

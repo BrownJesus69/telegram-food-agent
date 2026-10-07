@@ -131,6 +131,9 @@ class GroqClient:
         self.models = [configured, *[m for m in DEFAULT_MODELS if m != configured]]      # models churn: keep fallbacks
         self.transport, self.timeout = transport, timeout
         self.breaker = CircuitBreaker()
+        self.vision_breaker = CircuitBreaker()           # photo failures (e.g. a model that rejects images) must not lock out text
+        self.vision_models = [config.GROQ_VISION_MODEL]
+        self.photo_cache: dict[str, dict] = {}           # raw replies keyed by image hash (never the image itself)
         self.cassette, self.replay_only, self.record = cassette, replay_only, record
         self.cache: dict[str, FoodRequest] = {}
         self.stats = {"calls": 0, "ok": 0, "failed": 0, "cache_hits": 0, "replayed": 0, "tokens": 0, "latency_ms": []}
@@ -184,58 +187,71 @@ class GroqClient:
             return None
 
     async def _call_chat(self, text: str) -> dict | None:
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"<customer_message>{text}</customer_message>"},
+        ]
+        return await self.chat_json(messages)
+
+    async def chat_json(self, messages: list[dict], *, models: list[str] | None = None, breaker: CircuitBreaker | None = None,
+                        max_tokens: int = 500) -> dict | None:
+        """POST one chat completion under the strict `RESPONSE_SCHEMA` and return the parsed JSON object (None on any failure).
+
+        `models` / `breaker` default to the text pipeline's; the photo path passes its own so that a model that cannot take
+        images (or a rejected image) never locks the text interpreter out. A 429 is shared: the quota belongs to the key."""
+        models = self.models if models is None else models
+        breaker = breaker or self.breaker
         self.stats["calls"] += 1
         started = time.monotonic()
         retried = False
         while True:
+            model = models[0]
             body = {
-                "model": self.model,
+                "model": model,
                 "temperature": 0,
-                "max_completion_tokens": 500,
-                **model_options(self.model),
+                "max_completion_tokens": max_tokens,
+                **model_options(model),
                 "response_format": {"type": "json_schema", "json_schema": RESPONSE_SCHEMA},
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"<customer_message>{text}</customer_message>"},
-                ],
+                "messages": messages,
             }
             try:
                 async with self._client() as c:
                     r = await c.post(f"{API}/chat/completions", headers={"Authorization": f"Bearer {self.api_key}"}, json=body)
-                if r.status_code == 404 and "model" in r.text.lower() and len(self.models) > 1:
-                    gone = self.models.pop(0)
-                    log.warning("Groq model %r is unavailable; switching to %r (update GROQ_MODEL in .env)", gone, self.model)
+                if r.status_code == 404 and "model" in r.text.lower() and len(models) > 1:
+                    gone = models.pop(0)
+                    log.warning("Groq model %r is unavailable; switching to %r (update GROQ_MODEL in .env)", gone, models[0])
                     continue
                 if r.status_code == 429:
                     wait = _retry_after(r)
                     log.warning("Groq rate limit hit; pausing LLM calls for %.0fs", wait)
-                    self.breaker.failure(cooldown=wait)
+                    for b in {id(breaker): breaker, id(self.breaker): self.breaker}.values():
+                        b.failure(cooldown=wait)
                     self.stats["failed"] += 1
                     return None
                 if r.status_code == 400 and "json_validate_failed" in r.text:
                     if not retried:                     # the model produced JSON that broke the schema: one more try
                         retried = True
                         continue
-                    self.breaker.failure()
+                    breaker.failure()
                     self.stats["failed"] += 1
                     return None
                 if r.status_code in (400, 401, 403, 404):
                     # permanent for this config (bad key / schema rejected / no usable model): stop retrying for a while
                     log.error("Groq rejected the request (%s): %s", r.status_code, r.text[:160].replace(self.api_key, "***"))
-                    self.breaker.failure(cooldown=600)
+                    breaker.failure(cooldown=600)
                     self.stats["failed"] += 1
                     return None
                 r.raise_for_status()
                 data = r.json()
                 raw = json.loads(data["choices"][0]["message"]["content"])
-                self.breaker.success()
+                breaker.success()
                 self.stats["ok"] += 1
                 self.stats["tokens"] += int((data.get("usage") or {}).get("total_tokens") or 0)
                 self.stats["latency_ms"] = (self.stats["latency_ms"] + [int((time.monotonic() - started) * 1000)])[-200:]
                 return raw if isinstance(raw, dict) else None
             except Exception as e:
                 log.warning("Groq call failed: %s", type(e).__name__)
-                self.breaker.failure()
+                breaker.failure()
                 self.stats["failed"] += 1
                 return None
 
