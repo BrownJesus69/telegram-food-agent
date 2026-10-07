@@ -49,6 +49,9 @@ planner, which reads the catalogue, and a customer's explicit confirm tap.
 | A customer can only read, cancel, rate or confirm their own orders; admin buttons need an admin id | `orders`, `handlers.is_admin` | `tests/test_abuse.py` |
 | Everything echoed back is HTML-escaped (landmarks, names, dishes) | `html.escape` at every render | `tests/test_abuse.py` (hostile landmark and 14 hostile messages; the test bot rejects any invalid Telegram HTML) |
 | A stated need that has **no filter** (halal, diabetic, "no mushrooms", an allergen we do not model) is *flagged to the customer* instead of silently ignored | `rules.cautions`, `handlers.caution_line` | `evals/redteam.jsonl` (unenforceable and no-false-alarm categories) |
+| A **photo** is untrusted input twice over (pixels the model reads, and a model that may be wrong): text inside an image is just pixels; diet, allergens, budget, servings and sort are *always* dropped from a vision reading, dish words must be catalogue words, and the caption is read by the rules first | `concierge/vision.py`, `handlers.on_photo` | `tests/test_vision.py` (hostile scripted replies, 45 tests) |
+| A **Mini App payload** (`web_app_data`) is untrusted client data: size-limited, strict JSON object, finite numbers inside the Bengaluru box, then the same path as a shared pin; garbage changes no state | `address_flow.parse_miniapp_pin` | `tests/test_miniapp.py` (28 hostile payloads) |
+| **Reorder and split** callbacks are strict-parsed and scoped to the order's own customer; a reorder is rebuilt from the *current* catalogue (never the old prices) | `orders.reorder_plan`, `billing`, `handlers` | `tests/test_reorder.py`, `tests/test_billing.py` |
 | Rate limiting per user, global error net, secrets never logged, container is non-root with a read-only filesystem | `observability`, `docker-compose.yml` | `tests/test_ops.py`, CI docker job |
 
 ## Measured: how dangerous is "just use the LLM"?

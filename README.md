@@ -3,7 +3,7 @@
 [![CI](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/ci.yml)
 
 [![CodeQL](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/codeql.yml/badge.svg)](https://github.com/BrownJesus69/telegram-food-agent/actions/workflows/codeql.yml)
-![tests](https://img.shields.io/badge/tests-253-brightgreen) ![coverage](https://img.shields.io/badge/coverage-90%25-brightgreen) ![types](https://img.shields.io/badge/mypy-clean-blue)
+![tests](https://img.shields.io/badge/tests-438-brightgreen) ![coverage](https://img.shields.io/badge/coverage-90%25-brightgreen) ![types](https://img.shields.io/badge/mypy-clean-blue)
 
 A Telegram bot where a customer says what they want in plain words (English, Hinglish or Kannada, typed or as a voice
 note), picks a delivery address (home, office, a friend's place), builds a cart, places a cash-on-delivery order, and a
@@ -24,7 +24,7 @@ Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [do
    [THREAT-MODEL.md](docs/THREAT-MODEL.md) lists what is still open.
 4. **The product:** order for yourself or a friend across Bengaluru; a simulated kitchen and rider run the order with a live-location map
    ([live QA, twice](docs/QA-REPORT.md)).
-5. **The operations:** Docker (non-root, read-only, healthcheck, restart policy), CI that runs 253 tests plus the evals, a `/metrics` endpoint
+5. **The operations:** Docker (non-root, read-only, healthcheck, restart policy), CI that runs 438 tests plus the evals, a `/metrics` endpoint
    and a dashboard; [load-tested](docs/LOADTEST.md) with 50 customers at once (p50 378 ms, p95 1351 ms per update, one process). The live bot is [@AdityaTFood_bot](https://t.me/AdityaTFood_bot); it runs on the author's machine, so it is up only while that machine is.
 
 ## What a customer can say
@@ -38,6 +38,10 @@ Status: **v0.4**. Roadmap and audit: [PLAN.md](PLAN.md) · design decisions: [do
 | `I am hungry` / `hi` | suggestions that suit the time of day (breakfast vs late night), plus quick-pick buttons |
 | 🎙 a voice note | transcribed (Groq Whisper), shown back to you, then handled like text |
 | `deliver to office` · `change address` | switch delivery address from any screen; search and cart re-check automatically |
+| 🗺 **Pick on map** (button in the address prompts) | a [Telegram Mini App](docs/MINIAPP.md): drag a pin on an OpenStreetMap map, hosted free on GitHub Pages; the pick goes through the same Bengaluru check and label/recipient steps as a shared GPS pin |
+| `the usual` · `order again` · `/reorder` | rebuilds a previous delivered order from the *current* catalogue (drops what is unavailable, refuses a closed or out-of-range kitchen); offers "your usual breakfast" when you have ordered the same thing in this meal slot twice ([docs](docs/FEATURES-REORDER-SPLIT.md)) |
+| 🧾 **Split bill** (after a group order) | equal shares including the delivery fee, in whole rupees that sum exactly to the total, as plain text to forward |
+| 📸 a **photo of food** | a vision model guesses the dish, the bot shows what it *thinks* it sees (flagged as a guess), and only catalogue words survive; a photo never sets diet, allergens or budget ([docs](docs/FEATURES-PHOTO.md)) |
 | `biryani under 100` | no match — and **why**: "cheapest match is ₹165 (Veg Dum Biryani …)", "that kitchen is closed right now", "beyond its 4.8 km delivery range" |
 
 Every answer begins with **"I understood: …"** (marked *AI-assisted* when the LLM was involved) and each suggestion
@@ -189,7 +193,7 @@ foodbot/             application (python -m foodbot)
 seed_data/           generated restaurants.csv + menu.csv
 tools/catalogue_gen/ dish master list, archetypes, localities, generator, validator
 evals/               golden + held-out sets, red-team set, cassettes of recorded LLM replies, runners, grounding checker
-tests/               253 tests: unit, data, conversation (fake Telegram), eval gates, property-based (Hypothesis), abuse/red-team
+tests/               438 tests: unit, data, conversation (fake Telegram), eval gates, property-based (Hypothesis), abuse/red-team
 docs/adr/            architecture decisions        docs/THREAT-MODEL.md   what is protected, what stops it, what is open
 tools/archive/       the original OSM-based scripts and data, kept for reference
 ```
