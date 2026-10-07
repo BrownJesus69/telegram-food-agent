@@ -1,4 +1,6 @@
 import sqlite3
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from foodbot import db
 from foodbot.services import catalogue
@@ -266,3 +268,142 @@ def rate_order(order_id, customer_id, stars):
             conn.execute("UPDATE orders SET rating=? WHERE id=?", (stars, order_id))
     finally:
         conn.close()
+
+
+# ----------------------------------------------------------------------------- reorder / "the usual"
+@dataclass(frozen=True)
+class KeptLine:
+    item_id: str
+    name: str
+    qty: int
+    unit: int           # today's catalogue price, never the price on the old order
+    amount: int
+
+
+@dataclass(frozen=True)
+class DroppedLine:
+    name: str
+    qty: int
+    reason: str
+
+
+@dataclass(frozen=True)
+class ReorderPlan:
+    order_id: int
+    restaurant_id: str
+    kept: tuple[KeptLine, ...]
+    dropped: tuple[DroppedLine, ...]
+    blocked: str | None = None      # set when the whole order cannot be placed (closed, out of range, gone)
+
+    @property
+    def subtotal(self) -> int:
+        return sum(k.amount for k in self.kept)
+
+
+@dataclass(frozen=True)
+class Usual:
+    slot: str
+    order_id: int       # the most recent delivered order in that slot from the favourite kitchen
+    times: int
+    plan: ReorderPlan
+
+
+def recent_delivered(customer_id, limit=3):
+    """The customer's last delivered orders, newest first (only their own: the query is keyed on customer_id)."""
+    conn = db.connect()
+    rows = conn.execute(
+        "SELECT * FROM orders WHERE customer_id=? AND status='DELIVERED' ORDER BY id DESC LIMIT ?",
+        (customer_id, max(1, min(int(limit), 20))),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def reorder_plan(tg_id, order_id, now: datetime | None = None) -> ReorderPlan:
+    """Rebuild a cart from one of the customer's delivered orders against *today's* catalogue.
+
+    Kept: the item still exists on that restaurant's menu and is available; quantity is clamped to 1..MAX_QTY; the
+    price is the current catalogue price. Dropped lines carry a reason. When the restaurant is closed, inactive or
+    outside the active address's delivery radius, nothing is kept and `blocked` says why. With no active address the
+    radius cannot be checked here; the normal cart screen then asks for an address.
+    """
+    order, items = get_order(order_id)
+    if not order or order["customer_id"] != tg_id:
+        raise OrderError("Not your order.")
+    if order["status"] != "DELIVERED":
+        raise OrderError("You can only order again from a delivered order.")
+    rest = catalogue.RESTAURANTS.get(order["restaurant_id"])
+    wanted = [(i["item_id"], i["item_name"], clamp_qty(i["quantity"])) for i in items]
+
+    blocked = None
+    if rest is None or not rest.active:
+        blocked = "That restaurant isn't taking orders any more."
+    elif not rest.open_at(now):
+        blocked = f"{rest.name} is closed right now (open {rest.hours_label})."
+    else:
+        addr = db.get_active_address(tg_id)
+        if addr:
+            dist = haversine_km(addr["latitude"], addr["longitude"], rest.lat, rest.lon)
+            if dist > rest.radius_km:
+                blocked = (f"{rest.name} doesn't deliver to {addr['label']} "
+                           f"({dist:.1f} km away, limit {rest.radius_km:g} km).")
+    if blocked:
+        return ReorderPlan(order_id, order["restaurant_id"], (), tuple(DroppedLine(n, q, blocked) for _, n, q in wanted), blocked)
+
+    kept, dropped = [], []
+    for item_id, name, qty in wanted:
+        it = catalogue.ITEMS.get(item_id)
+        if it is None or it.restaurant_id != rest.id:
+            dropped.append(DroppedLine(name, qty, "no longer on the menu"))
+        elif not it.available:
+            dropped.append(DroppedLine(name, qty, "unavailable right now"))
+        else:
+            kept.append(KeptLine(it.id, it.name, qty, it.price, it.price * qty))
+    return ReorderPlan(order_id, rest.id, tuple(kept), tuple(dropped))
+
+
+def reorder(tg_id, order_id, now: datetime | None = None):
+    """Fill the cart from a delivered order. Returns (plan, replaced_previous_cart); the cart is untouched if nothing was kept."""
+    plan = reorder_plan(tg_id, order_id, now)
+    if not plan.kept:
+        return plan, False
+    return plan, replace_cart(tg_id, [(k.item_id, k.qty) for k in plan.kept])
+
+
+USUAL_MIN_TIMES = 2
+
+
+def _slot_of(created_at: str) -> str | None:
+    try:
+        dt = datetime.fromisoformat(created_at)
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return catalogue.current_slot(dt)
+
+
+def usual_for_slot(tg_id, now: datetime | None = None) -> Usual | None:
+    """"Your usual <slot>": a restaurant the customer ordered from, and had delivered, at least twice in the current meal slot.
+
+    Deterministic and cheap: one indexed-by-customer SQL read of recent delivered orders, grouped in Python by (slot,
+    restaurant). The favourite is the most frequent kitchen (ties: most recent order). It is only offered when the
+    most recent such order can be rebuilt right now (open, in range, something still available).
+    """
+    slot = catalogue.current_slot(now)
+    conn = db.connect()
+    rows = conn.execute(
+        "SELECT id, restaurant_id, created_at FROM orders WHERE customer_id=? AND status='DELIVERED' ORDER BY id DESC LIMIT 60",
+        (tg_id,),
+    ).fetchall()
+    conn.close()
+    by_rest: dict[str, list[int]] = {}
+    for r in rows:
+        if _slot_of(r["created_at"]) == slot:
+            by_rest.setdefault(r["restaurant_id"], []).append(r["id"])          # newest first, as fetched
+    ranked = sorted((ids for ids in by_rest.values() if len(ids) >= USUAL_MIN_TIMES), key=lambda ids: (-len(ids), -ids[0]))
+    for ids in ranked:
+        plan = reorder_plan(tg_id, ids[0], now)
+        if plan.kept:
+            return Usual(slot, ids[0], len(ids), plan)
+    return None
