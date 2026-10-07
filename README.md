@@ -149,7 +149,7 @@ with a way forward, so the demo works from anywhere.
 python -m venv .venv && source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 cp .env.example .env                                      # TELEGRAM_BOT_TOKEN and ADMIN_CHAT_ID at minimum; GROQ_API_KEY for AI/voice
-python -m pytest                                          # ~150 tests, no network, no keys needed
+python -m pytest                                          # 438 tests, no network, no keys needed (-m 'not slow' for the quick set)
 python -m evals.run                                       # concierge quality + guardrail report
 python -m foodbot
 ```
@@ -177,8 +177,9 @@ docker compose down                 # graceful stop (SIGTERM: finishes the curre
 * **Admin commands:** `/stats` (summary of the dashboard), `/orders`. Customers: `/track`, `/address`, `/cart`.
 * Docker Desktop must start with the machine for the bot to survive a reboot. `docker kill` counts as a manual stop and is
   not auto-restarted; crashes are.
-* CI (`.github/workflows/ci.yml`): ruff, catalogue validation, ~175 tests, the concierge eval + guardrail, then a Docker build
-  with non-root / no-secrets / catalogue-loads / fails-fast-without-token checks.
+* CI (`.github/workflows/ci.yml`): ruff, mypy, catalogue validation, 438 tests with a coverage gate, the concierge eval, the red-team eval and the
+  bake-off replay, then a Docker build with non-root / no-secrets / catalogue-loads / fails-fast checks and a Trivy scan; on `main` the image is
+  published to GHCR. CodeQL and Dependabot run alongside.
 
 ![Ops dashboard](docs/media/dashboard-top.jpg)
 ![Ops dashboard: AI and system panels](docs/media/dashboard-ai-system.jpg)
